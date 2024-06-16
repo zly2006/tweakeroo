@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/sakura-ryoko/tweakeroo.svg)](https://jitpack.io/#sakura-ryoko/tweakeroo)
+
 Tweakeroo
 ==============
 Tweakeroo is a client-side-only Minecraft mod using LiteLoader.
