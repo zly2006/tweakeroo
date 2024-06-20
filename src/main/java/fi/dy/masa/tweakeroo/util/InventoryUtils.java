@@ -824,6 +824,9 @@ public class InventoryUtils
         }
     }
 
+    /**
+     * Adds the enchantment checks for Tools or Weapons
+     */
     private static int findRepairableItemNotInRepairableSlot(Slot targetSlot, PlayerEntity player)
     {
         ScreenHandler containerPlayer = player.currentScreenHandler;
