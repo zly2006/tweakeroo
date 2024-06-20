@@ -1,6 +1,7 @@
 package fi.dy.masa.tweakeroo.data;
 
 import com.mojang.datafixers.util.Either;
+import fi.dy.masa.tweakeroo.Tweakeroo;
 import fi.dy.masa.tweakeroo.mixin.IMixinDataQueryHandler;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -66,7 +67,10 @@ public class ServerDataSyncer {
         return null;
     }
 
-    public void handleQueryResponse(int transactionId, NbtCompound nbt) {
+    public void handleQueryResponse(int transactionId, NbtCompound nbt)
+    {
+        Tweakeroo.logger.warn("handleQueryResponse: id [{}] // nbt {}", transactionId, nbt.toString());
+
         if (nbt == null) return;
         if (pendingQueries.containsKey(transactionId)) {
             Either<BlockPos, Integer> either = pendingQueries.remove(transactionId);
@@ -96,7 +100,10 @@ public class ServerDataSyncer {
         }
     }
 
-    public Inventory getBlockInventory(World world, BlockPos pos) {
+    public Inventory getBlockInventory(World world, BlockPos pos)
+    {
+        Tweakeroo.logger.warn("getBlockInventory: pos [{}]", pos.toShortString());
+
         if (!world.isChunkLoaded(pos)) return null;
         var data = getCache(pos);
         if (data instanceof Inventory inv) {
@@ -131,8 +138,12 @@ public class ServerDataSyncer {
         return null;
     }
 
-    public void syncBlockEntity(World world, BlockPos pos) {
-        if (MinecraftClient.getInstance().isIntegratedServerRunning()) {
+    public void syncBlockEntity(World world, BlockPos pos)
+    {
+        Tweakeroo.logger.warn("syncBlockEntity: pos [{}]", pos.toShortString());
+
+        if (MinecraftClient.getInstance().isIntegratedServerRunning())
+        {
             BlockEntity blockEntity = MinecraftClient.getInstance().getServer().getWorld(world.getRegistryKey()).getWorldChunk(pos).getBlockEntity(pos, WorldChunk.CreationType.CHECK);
             if (blockEntity != null) {
                 blockCache.put(pos, new Pair<>(blockEntity, System.currentTimeMillis()));
@@ -147,7 +158,10 @@ public class ServerDataSyncer {
         }
     }
 
-    public void syncEntity(int networkId) {
+    public void syncEntity(int networkId)
+    {
+        Tweakeroo.logger.warn("syncEntity: pos [{}]", networkId);
+
         Either<BlockPos, Integer> idEither = Either.right(networkId);
         if (MinecraftClient.getInstance().getNetworkHandler() != null && !pendingQueries.containsValue(idEither)) {
             DataQueryHandler handler = MinecraftClient.getInstance().getNetworkHandler().getDataQueryHandler();
@@ -156,7 +170,8 @@ public class ServerDataSyncer {
         }
     }
 
-    public @Nullable Entity getServerEntity(Entity entity) {
+    public @Nullable Entity getServerEntity(Entity entity)
+    {
         Entity serverEntity = getCache(entity.getId());
         if (serverEntity == null) {
             syncEntity(entity.getId());

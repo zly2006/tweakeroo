@@ -138,10 +138,16 @@ public abstract class MixinMinecraftClient implements IMinecraftClientInvoker
     )
     private void onWorldChanged(ClientWorld world, CallbackInfo ci)
     {
-        if (world == null) {
-            ServerDataSyncer.INSTANCE = null;
-        } else {
-            ServerDataSyncer.INSTANCE = new ServerDataSyncer(world);
+        if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+        {
+            if (world == null)
+            {
+                ServerDataSyncer.INSTANCE = null;
+            }
+            else
+            {
+                ServerDataSyncer.INSTANCE = new ServerDataSyncer(world);
+            }
         }
     }
 }

@@ -1,16 +1,9 @@
 package fi.dy.masa.tweakeroo.renderer;
 
 import java.util.Set;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import fi.dy.masa.malilib.util.EntityUtils;
-import fi.dy.masa.malilib.util.GuiUtils;
-import fi.dy.masa.tweakeroo.config.Configs;
-import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
-import fi.dy.masa.tweakeroo.mixin.IMixinAbstractHorseEntity;
-import fi.dy.masa.tweakeroo.util.MiscUtils;
-import fi.dy.masa.tweakeroo.util.RayTraceUtils;
-import fi.dy.masa.tweakeroo.util.SnapAimMode;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.client.MinecraftClient;
@@ -37,10 +30,15 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fStack;
-
-import java.util.Set;
+import fi.dy.masa.malilib.util.EntityUtils;
+import fi.dy.masa.malilib.util.GuiUtils;
+import fi.dy.masa.tweakeroo.config.Configs;
+import fi.dy.masa.tweakeroo.config.FeatureToggle;
+import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
+import fi.dy.masa.tweakeroo.mixin.IMixinAbstractHorseEntity;
+import fi.dy.masa.tweakeroo.util.MiscUtils;
+import fi.dy.masa.tweakeroo.util.RayTraceUtils;
+import fi.dy.masa.tweakeroo.util.SnapAimMode;
 
 public class RenderUtils
 {
@@ -149,18 +147,25 @@ public class RenderUtils
                 shulkerBoxBlock = (ShulkerBoxBlock) blockTmp;
             }
 
-            if (world instanceof ServerWorld realWorld) {
+            if (world instanceof ServerWorld realWorld)
+            {
                 inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(realWorld, pos);
-            } else {
+            }
+            else if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+            {
                 inv = ServerDataSyncer.INSTANCE.getBlockInventory(world, pos);
             }
         }
         else if (trace.getType() == HitResult.Type.ENTITY)
         {
             Entity entity = ((EntityHitResult) trace).getEntity();
-            if (entity.getWorld().isClient) {
+
+            if (entity.getWorld().isClient &&
+                FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+            {
                 Entity serverEntity = ServerDataSyncer.INSTANCE.getServerEntity(entity);
-                if (serverEntity != null) {
+                if (serverEntity != null)
+                {
                     entity = serverEntity;
                 }
             }
