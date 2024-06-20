@@ -1,17 +1,18 @@
 package fi.dy.masa.tweakeroo.util;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ObjectInputFilter;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.AttributeModifiersComponent;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -22,6 +23,8 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -34,7 +37,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.intprovider.UniformIntProvider;
 import net.minecraft.world.World;
-
 import fi.dy.masa.malilib.gui.Message;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.InfoUtils;
@@ -123,7 +125,7 @@ public class InventoryUtils
         {
             try
             {
-                Item item = Registries.ITEM.get(new Identifier(name));
+                Item item = Registries.ITEM.get(Identifier.tryParse(name));
 
                 if (item != null && item != Items.AIR)
                 {
@@ -194,7 +196,7 @@ public class InventoryUtils
                 {
                     try
                     {
-                        Optional<Item> weapon = Registries.ITEM.getOrEmpty(new Identifier(itemId));
+                        Optional<Item> weapon = Registries.ITEM.getOrEmpty(Identifier.tryParse(itemId));
 
                         if (weapon.isPresent())
                         {
@@ -218,7 +220,7 @@ public class InventoryUtils
                 {
                     try
                     {
-                        Optional<EntityType<?>> entity = Registries.ENTITY_TYPE.getOrEmpty(new Identifier(entity_id));
+                        Optional<EntityType<?>> entity = Registries.ENTITY_TYPE.getOrEmpty(Identifier.tryParse(entity_id));
 
                         if (entity.isPresent())
                         {
@@ -424,7 +426,25 @@ public class InventoryUtils
 
     private static boolean isBetterWeapon(ItemStack testedStack, ItemStack previousWeapon, Entity entity)
     {
-        return testedStack.isEmpty() == false && matchesWeaponMapping(testedStack, entity) && (makesMoreDamage(testedStack, previousWeapon) || matchesWeaponMapping(previousWeapon, entity) == false);
+        if (previousWeapon.isEmpty())
+        {
+            return true;
+        }
+
+        if (testedStack.isEmpty() == false)
+        {
+            if (matchesWeaponMapping(testedStack, entity) && (makesMoreDamage(testedStack, previousWeapon) || matchesWeaponMapping(previousWeapon, entity) == false))
+            {
+                if (Configs.Generic.WEAPON_SWAP_BETTER_ENCHANTS.getBooleanValue())
+                {
+                    return hasTheSameOrBetterRarity(testedStack, previousWeapon) && hasSameOrBetterWeaponEnchantments(testedStack, previousWeapon);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean isBetterWeaponAndHasDurability(ItemStack testedStack, ItemStack previousTool, Entity entity)
@@ -464,6 +484,7 @@ public class InventoryUtils
     protected static boolean matchesWeaponMapping(ItemStack stack, Entity entity)
     {
         HashSet<Item> weapons = WEAPON_MAPPING.getOrDefault(entity.getType(), WEAPON_MAPPING.get(null));
+
         return weapons != null && weapons.contains(stack.getItem());
     }
 
@@ -497,9 +518,47 @@ public class InventoryUtils
         }
     }
 
+    public static int getEnchantmentLevel(ItemStack stack, @Nonnull RegistryKey<Enchantment> enchantment)
+    {
+        ItemEnchantmentsComponent enchants = stack.getEnchantments();
+
+        if (enchants.equals(ItemEnchantmentsComponent.DEFAULT) == false)
+        {
+            Set<RegistryEntry<Enchantment>> enchantList = enchants.getEnchantments();
+
+            for (RegistryEntry<Enchantment> entry : enchantList)
+            {
+                if (entry.matchesKey(enchantment))
+                {
+                    return enchants.getLevel(entry);
+                }
+            }
+        }
+
+        return -1;
+    }
+
     private static boolean isBetterTool(ItemStack testedStack, ItemStack previousTool, BlockState state)
     {
-        return testedStack.isEmpty() == false && isMoreEffectiveTool(testedStack, previousTool, state);
+        if (previousTool.isEmpty())
+        {
+            return true;
+        }
+
+        if (testedStack.isEmpty() == false)
+        {
+            if (isMoreEffectiveTool(testedStack, previousTool, state))
+            {
+                if (Configs.Generic.TOOL_SWAP_BETTER_ENCHANTS.getBooleanValue())
+                {
+                    return hasTheSameOrBetterRarity(testedStack, previousTool) && hasSameOrBetterToolEnchantments(testedStack, previousTool);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean isBetterToolAndHasDurability(ItemStack testedStack, ItemStack previousTool, BlockState state)
@@ -507,9 +566,71 @@ public class InventoryUtils
         return hasEnoughDurability(testedStack) && isBetterTool(testedStack, previousTool, state);
     }
 
+    private static boolean hasTheSameOrBetterRarity(ItemStack testedStack, ItemStack previousTool)
+    {
+        return testedStack.getRarity().compareTo(previousTool.getRarity()) >= 0;
+    }
+
     private static boolean isMoreEffectiveTool(ItemStack testedStack, ItemStack previousTool, BlockState state)
     {
         return getBaseBlockBreakingSpeed(testedStack, state) > getBaseBlockBreakingSpeed(previousTool, state);
+    }
+
+    /**
+     * Creates a total additive value of the essential Enchantment Levels
+     * If one of them does not contain the same Enchantment;
+     * then the level should be -1, and will reduce its total weighted value by 1.
+     */
+    private static boolean hasSameOrBetterToolEnchantments(ItemStack testedStack, ItemStack previousTool)
+    {
+        int count = 0;
+
+        // Core Tool Enchants, where Mending has the highest weighted value
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.MENDING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.UNBREAKING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.EFFICIENCY);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.FORTUNE);
+
+        return count >= 0;
+    }
+
+    private static boolean hasSameOrBetterWeaponEnchantments(ItemStack testedStack, ItemStack previousTool)
+    {
+        int count = 0;
+
+        // Core Weapon Enchantments, where Mending has the highest weighted value
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.MENDING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.UNBREAKING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.LOOTING);
+
+        // Damage Dealing
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.SHARPNESS);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.SMITE);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.BANE_OF_ARTHROPODS);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.POWER);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.IMPALING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.DENSITY);
+
+        // Support
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.SWEEPING_EDGE);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.FIRE_ASPECT);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.PUNCH);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.INFINITY);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.FLAME);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.MULTISHOT);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.QUICK_CHARGE);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.PIERCING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.RIPTIDE);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.LOYALTY);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.CHANNELING);
+        count += hasSameOrBetterEnchantment(testedStack, previousTool, Enchantments.BREACH);
+
+        return count >= 0;
+    }
+
+    private static int hasSameOrBetterEnchantment(ItemStack testedStack, ItemStack previous, RegistryKey<Enchantment> enchantment)
+    {
+        return getEnchantmentLevel(testedStack, enchantment) - getEnchantmentLevel(previous, enchantment);
     }
 
     protected static float getBaseBlockBreakingSpeed(ItemStack stack, BlockState state)
@@ -518,7 +639,7 @@ public class InventoryUtils
 
         if (speed > 1.0f)
         {
-            int effLevel = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
+            int effLevel = getEnchantmentLevel(stack, Enchantments.EFFICIENCY);
 
             if (effLevel > 0)
             {
@@ -690,7 +811,7 @@ public class InventoryUtils
         if (stack.isEmpty() == false &&
             (stack.isDamageable() == false ||
              stack.isDamaged() == false ||
-             EnchantmentHelper.getLevel(Enchantments.MENDING, stack) <= 0))
+             getEnchantmentLevel(stack, Enchantments.MENDING) <= 0))
         {
             Slot slot = player.currentScreenHandler.getSlot(slotNum);
             int slotRepairableItem = findRepairableItemNotInRepairableSlot(slot, player);
@@ -716,7 +837,7 @@ public class InventoryUtils
                 // Don't take items from the current hotbar slot
                 if ((slot.id - 36) != player.getInventory().selectedSlot &&
                     stack.isDamageable() && stack.isDamaged() && targetSlot.canInsert(stack) &&
-                    EnchantmentHelper.getLevel(Enchantments.MENDING, stack) > 0)
+                    getEnchantmentLevel(stack, Enchantments.MENDING) > 0)
                 {
                     return slot.id;
                 }
@@ -922,6 +1043,7 @@ public class InventoryUtils
             if (fi.dy.masa.malilib.util.InventoryUtils.isRegularInventorySlot(slot.id, false) &&
                 ItemStack.areItemsEqual(stackSlot, stackReference) &&
                 stackSlot.getMaxDamage() - stackSlot.getDamage() >= minDurabilityLeft &&
+                //hasSameOrBetterToolEnchantments(stackReference, stackSlot))
                 hasSameIshEnchantments(stackReference, stackSlot))
             {
                 return slot.id;
@@ -933,18 +1055,18 @@ public class InventoryUtils
 
     private static boolean hasSameIshEnchantments(ItemStack stackReference, ItemStack stack)
     {
-        int level = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stackReference);
+        int level = getEnchantmentLevel(stackReference, Enchantments.SILK_TOUCH);
 
         if (level > 0)
         {
-            return EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) >= level;
+            return getEnchantmentLevel(stack, Enchantments.SILK_TOUCH) >= level;
         }
 
-        level = EnchantmentHelper.getLevel(Enchantments.FORTUNE, stackReference);
+        level = getEnchantmentLevel(stackReference, Enchantments.FORTUNE);
 
         if (level > 0)
         {
-            return EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack) >= level;
+            return getEnchantmentLevel(stack, Enchantments.FORTUNE) >= level;
         }
 
         return true;
@@ -971,7 +1093,7 @@ public class InventoryUtils
 
                 if (speed > 1.0f)
                 {
-                    int effLevel = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
+                    int effLevel = getEnchantmentLevel(stack, Enchantments.EFFICIENCY);
 
                     if (effLevel > 0)
                     {
@@ -1078,7 +1200,7 @@ public class InventoryUtils
 
         double reach = mc.player.getBlockInteractionRange();
         boolean isCreative = player.isCreative();
-        HitResult trace = player.raycast(reach, mc.getTickDelta(), false);
+        HitResult trace = player.raycast(reach, mc.getRenderTickCounter().getTickDelta(false), false);
 
         if (trace != null && trace.getType() == HitResult.Type.BLOCK)
         {

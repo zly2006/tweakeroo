@@ -9,11 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import fi.dy.masa.tweakeroo.config.Configs;
@@ -49,7 +45,7 @@ public abstract class MixinWorldRenderer
 
     @Inject(method = "render", at = @At(value = "INVOKE_STRING",
             target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=terrain_setup"))
-    private void preSetupTerrain(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
+    private void preSetupTerrain(RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_FREE_CAMERA.getBooleanValue())
         {
@@ -59,7 +55,7 @@ public abstract class MixinWorldRenderer
 
     @Inject(method = "render", at = @At(value = "INVOKE_STRING",
             target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=compile_sections"))
-    private void postSetupTerrain(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
+    private void postSetupTerrain(RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci)
     {
         CameraUtils.setFreeCameraSpectator(false);
     }
