@@ -152,7 +152,8 @@ public class RenderUtils
             {
                 inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(realWorld, pos);
             }
-            else if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue() && world.getBlockState(pos).getBlock() instanceof BlockEntityProvider)
+            else if (world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
+                    && !FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
             {
                 inv = ServerDataSyncer.getInstance().getBlockInventory(world, pos);
             }
@@ -162,7 +163,7 @@ public class RenderUtils
             Entity entity = ((EntityHitResult) trace).getEntity();
 
             if (entity.getWorld().isClient &&
-                FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+                !FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
             {
                 Entity serverEntity = ServerDataSyncer.getInstance().getServerEntity(entity);
                 if (serverEntity != null)
