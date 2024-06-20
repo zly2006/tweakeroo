@@ -26,7 +26,7 @@ public class MixinDataQueryHandler
     {
         Tweakeroo.logger.debug("MixinDataQueryHandler: nbt {}", nbt.toString());
 
-        if (!FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+        if (FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
         {
             ServerDataSyncer.getInstance().handleQueryResponse(transactionId, nbt);
         }

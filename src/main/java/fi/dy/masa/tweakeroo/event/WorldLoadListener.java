@@ -5,6 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import fi.dy.masa.malilib.interfaces.IWorldLoadListener;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
+import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
 
 public class WorldLoadListener implements IWorldLoadListener
 {
@@ -26,5 +27,7 @@ public class WorldLoadListener implements IWorldLoadListener
                 FeatureToggle.TWEAK_GAMMA_OVERRIDE.setBooleanValue(true);
             }
         }
+
+        ServerDataSyncer.resetInstance();
     }
 }

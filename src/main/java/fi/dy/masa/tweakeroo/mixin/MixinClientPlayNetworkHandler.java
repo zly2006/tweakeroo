@@ -46,7 +46,7 @@ public abstract class MixinClientPlayNetworkHandler
     )
     private void onCommandTree(CallbackInfo ci)
     {
-        if (!FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+        if (FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
         {
             // when the player becomes OP, the server sends the command tree to the client
             ServerDataSyncer.getInstance().recheckOpStatus();

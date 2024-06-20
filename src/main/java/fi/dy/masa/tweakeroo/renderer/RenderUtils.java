@@ -47,9 +47,13 @@ public class RenderUtils
 
     public static void renderHotbarSwapOverlay(MinecraftClient mc, DrawContext drawContext)
     {
+        if (mc.player == null)
+        {
+            return;
+        }
         PlayerEntity player = mc.player;
 
-        if (player != null && mc.currentScreen == null)
+        if (mc.currentScreen == null)
         {
             final int scaledWidth = GuiUtils.getScaledWindowWidth();
             final int scaledHeight = GuiUtils.getScaledWindowHeight();
@@ -120,6 +124,11 @@ public class RenderUtils
         World world = fi.dy.masa.malilib.util.WorldUtils.getBestWorld(mc);
         Entity cameraEntity = EntityUtils.getCameraEntity();
 
+        if (mc.player == null)
+        {
+            return;
+        }
+
         if (cameraEntity == mc.player && world instanceof ServerWorld)
         {
             // We need to get the player from the server world (if available, ie. in single player),
@@ -150,7 +159,7 @@ public class RenderUtils
 
             inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
             if (world.isClient && world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
-                    && !FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+                    && FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
             {
                 inv = ServerDataSyncer.getInstance().getBlockInventory(world, pos);
             }
@@ -160,7 +169,7 @@ public class RenderUtils
             Entity entity = ((EntityHitResult) trace).getEntity();
 
             if (entity.getWorld().isClient &&
-                !FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+                FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
             {
                 Entity serverEntity = ServerDataSyncer.getInstance().getServerEntity(entity);
                 if (serverEntity != null)
@@ -193,7 +202,7 @@ public class RenderUtils
         int x = xCenter - 52 / 2;
         int y = yCenter - 92;
 
-        if (inv != null && inv.size() > 0)
+        if (inv != null && !inv.isEmpty())
         {
             final boolean isHorse = (entityLivingBase instanceof AbstractHorseEntity);
             final int totalSlots = isHorse ? inv.size() - 2 : inv.size();
@@ -243,6 +252,18 @@ public class RenderUtils
 
     public static void renderPlayerInventoryOverlay(MinecraftClient mc, DrawContext drawContext)
     {
+        if (mc.player == null)
+        {
+            return;
+        }
+
+        Inventory inv = mc.player.getInventory();
+
+        if (inv.isEmpty())
+        {
+            return;
+        }
+
         int x = GuiUtils.getScaledWindowWidth() / 2 - 176 / 2;
         int y = GuiUtils.getScaledWindowHeight() / 2 + 10;
         int slotOffsetX = 8;
@@ -252,12 +273,23 @@ public class RenderUtils
         fi.dy.masa.malilib.render.RenderUtils.color(1f, 1f, 1f, 1f);
 
         fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryBackground(type, x, y, 9, 27, mc);
-        fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryStacks(type, mc.player.getInventory(), x + slotOffsetX, y + slotOffsetY, 9, 9, 27, mc, drawContext);
+        fi.dy.masa.malilib.render.InventoryOverlay.renderInventoryStacks(type, inv, x + slotOffsetX, y + slotOffsetY, 9, 9, 27, mc, drawContext);
     }
 
     public static void renderHotbarScrollOverlay(MinecraftClient mc, DrawContext drawContext)
     {
+        if (mc.player == null)
+        {
+            return;
+        }
+
         Inventory inv = mc.player.getInventory();
+
+        if (inv.isEmpty())
+        {
+            return;
+        }
+
         final int xCenter = GuiUtils.getScaledWindowWidth() / 2;
         final int yCenter = GuiUtils.getScaledWindowHeight() / 2;
         final int x = xCenter - 176 / 2;

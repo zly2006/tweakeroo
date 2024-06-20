@@ -1,9 +1,12 @@
 package fi.dy.masa.tweakeroo.data;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.Nullable;
 import com.mojang.datafixers.util.Either;
-import fi.dy.masa.tweakeroo.Tweakeroo;
-import fi.dy.masa.tweakeroo.config.FeatureToggle;
-import fi.dy.masa.tweakeroo.mixin.IMixinDataQueryHandler;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
@@ -14,7 +17,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.DataQueryHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.DoubleInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
@@ -22,16 +24,13 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.tweakeroo.config.FeatureToggle;
+import fi.dy.masa.tweakeroo.mixin.IMixinDataQueryHandler;
 
 @SuppressWarnings({"deprecation"})
-public class ServerDataSyncer {
+public class ServerDataSyncer
+{
     private static ServerDataSyncer INSTANCE;
 
     public static ServerDataSyncer getInstance()
@@ -82,6 +81,7 @@ public class ServerDataSyncer {
             {
                 syncBlockEntity(clientWorld, pos);
             }
+
             return data.getLeft();
         }
 
@@ -100,6 +100,7 @@ public class ServerDataSyncer {
             {
                 syncEntity(networkId);
             }
+
             return data.getLeft();
         }
 
@@ -108,8 +109,6 @@ public class ServerDataSyncer {
 
     public void handleQueryResponse(int transactionId, NbtCompound nbt)
     {
-        Tweakeroo.logger.debug("handleQueryResponse: id [{}] // nbt {}", transactionId, nbt);
-
         CompletableFuture<@Nullable NbtCompound> future = pendingQueriesById.remove(transactionId);
         if (future != null)
         {
@@ -131,15 +130,15 @@ public class ServerDataSyncer {
 
     public Inventory getBlockInventory(World world, BlockPos pos)
     {
-        if (FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+        if (FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue() == false)
         {
             return null;
         }
         else if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
+            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return null;
         }
-        Tweakeroo.logger.debug("getBlockInventory: pos [{}], op status: {}", pos.toShortString(), yesIAmOp);
 
         if (!world.isChunkLoaded(pos)) return null;
         if (getCache(pos) instanceof Inventory inv)
@@ -169,6 +168,7 @@ public class ServerDataSyncer {
                     }
                 }
             }
+
             return inv;
         }
 
@@ -192,13 +192,17 @@ public class ServerDataSyncer {
                 }
             }
         }
+
         return null;
     }
 
     public CompletableFuture<NbtCompound> syncBlockEntity(World world, BlockPos pos)
     {
-        Tweakeroo.logger.debug("syncBlockEntity: pos [{}], op status: {}", pos.toShortString(), yesIAmOp);
-        if (yesIAmOp.isPresent() && !yesIAmOp.get()) return CompletableFuture.completedFuture(null);
+        if (yesIAmOp.isPresent() && !yesIAmOp.get())
+        {
+            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
+            return CompletableFuture.completedFuture(null);
+        }
 
         if (MinecraftClient.getInstance().isIntegratedServerRunning())
         {
@@ -242,6 +246,7 @@ public class ServerDataSyncer {
             {
                 yesIAmOp = Optional.of(false);
             }
+
             return future;
         }
         else
@@ -252,8 +257,11 @@ public class ServerDataSyncer {
 
     public CompletableFuture<NbtCompound> syncEntity(int networkId)
     {
-        Tweakeroo.logger.debug("syncEntity: pos [{}], op status: {}", networkId, yesIAmOp);
-        if (yesIAmOp.isPresent() && !yesIAmOp.get()) return CompletableFuture.completedFuture(null);
+        if (yesIAmOp.isPresent() && !yesIAmOp.get())
+        {
+            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
+            return CompletableFuture.completedFuture(null);
+        }
 
         Either<BlockPos, Integer> idEither = Either.right(networkId);
         if (MinecraftClient.getInstance().getNetworkHandler() != null)
@@ -286,6 +294,7 @@ public class ServerDataSyncer {
             {
                 yesIAmOp = Optional.of(false);
             }
+
             return future;
         }
         else
@@ -296,7 +305,7 @@ public class ServerDataSyncer {
 
     public @Nullable Entity getServerEntity(Entity entity)
     {
-        if (FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
+        if (FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue() == false)
         {
             return null;
         }
@@ -304,7 +313,6 @@ public class ServerDataSyncer {
         {
             return null;
         }
-        Tweakeroo.logger.debug("getServerEntity: id [{}], type {}, op status: {}", entity.getId(), EntityType.getId(entity.getType()), yesIAmOp);
 
         Entity serverEntity = getCache(entity.getId());
         if (serverEntity == null)
@@ -312,6 +320,7 @@ public class ServerDataSyncer {
             syncEntity(entity.getId());
             return null;
         }
+
         return serverEntity;
     }
 
