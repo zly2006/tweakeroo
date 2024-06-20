@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("deprecation")
 public class ServerDataSyncer {
@@ -37,6 +38,7 @@ public class ServerDataSyncer {
     private final Map<BlockPos, Pair<BlockEntity, Long>> blockCache = new HashMap<>();
     private final Map<Integer, Pair<Entity, Long>> entityCache = new HashMap<>();
     private final Map<Integer, Either<BlockPos, Integer>> pendingQueries = new HashMap<>();
+    private final Map<Integer, CompletableFuture<@Nullable NbtCompound>> pendingQueryFutures = new HashMap<>();
     private final ClientWorld clientWorld;
 
     public ServerDataSyncer(ClientWorld world) {
@@ -69,7 +71,8 @@ public class ServerDataSyncer {
 
     public void handleQueryResponse(int transactionId, NbtCompound nbt)
     {
-        Tweakeroo.logger.warn("handleQueryResponse: id [{}] // nbt {}", transactionId, nbt.toString());
+        Tweakeroo.logger.warn("handleQueryResponse: id [{}] // nbt {}", transactionId, nbt);
+        pendingQueryFutures.remove(transactionId).complete(nbt);
 
         if (nbt == null) return;
         if (pendingQueries.containsKey(transactionId)) {
@@ -135,11 +138,29 @@ public class ServerDataSyncer {
         }
 
         syncBlockEntity(world, pos);
+
+        BlockState state = world.getBlockState(pos);
+        if (state.getBlock() instanceof ChestBlock)
+        {
+            ChestType type = state.get(ChestBlock.CHEST_TYPE);
+
+            if (type != ChestType.SINGLE)
+            {
+                BlockPos posAdj = pos.offset(ChestBlock.getFacing(state));
+                if (world.isChunkLoaded(posAdj))
+                {
+                    BlockState stateAdj = world.getBlockState(posAdj);
+                    if (stateAdj.getBlock() instanceof ChestBlock)
+                    {
+                        syncBlockEntity(world, posAdj);
+                    }
+                }
+            }
+        }
         return null;
     }
 
-    public void syncBlockEntity(World world, BlockPos pos)
-    {
+    public CompletableFuture<NbtCompound> syncBlockEntity(World world, BlockPos pos) {
         Tweakeroo.logger.warn("syncBlockEntity: pos [{}]", pos.toShortString());
 
         if (MinecraftClient.getInstance().isIntegratedServerRunning())
@@ -147,7 +168,7 @@ public class ServerDataSyncer {
             BlockEntity blockEntity = MinecraftClient.getInstance().getServer().getWorld(world.getRegistryKey()).getWorldChunk(pos).getBlockEntity(pos, WorldChunk.CreationType.CHECK);
             if (blockEntity != null) {
                 blockCache.put(pos, new Pair<>(blockEntity, System.currentTimeMillis()));
-                return;
+                return CompletableFuture.completedFuture(blockEntity.createNbt(world.getRegistryManager()));
             }
         }
         Either<BlockPos, Integer> posEither = Either.left(pos);
@@ -155,10 +176,14 @@ public class ServerDataSyncer {
             DataQueryHandler handler = MinecraftClient.getInstance().getNetworkHandler().getDataQueryHandler();
             handler.queryBlockNbt(pos, it -> {});
             pendingQueries.put(((IMixinDataQueryHandler) handler).currentTransactionId(), posEither);
+            CompletableFuture<NbtCompound> future = new CompletableFuture<>();
+            pendingQueryFutures.put(((IMixinDataQueryHandler) handler).currentTransactionId(), future);
+            return future;
         }
+        throw new IllegalStateException("Not connected to a server");
     }
 
-    public void syncEntity(int networkId)
+    public CompletableFuture<NbtCompound> syncEntity(int networkId)
     {
         Tweakeroo.logger.warn("syncEntity: pos [{}]", networkId);
 
@@ -167,7 +192,11 @@ public class ServerDataSyncer {
             DataQueryHandler handler = MinecraftClient.getInstance().getNetworkHandler().getDataQueryHandler();
             handler.queryEntityNbt(networkId, it -> {});
             pendingQueries.put(((IMixinDataQueryHandler) handler).currentTransactionId(), idEither);
+            CompletableFuture<NbtCompound> future = new CompletableFuture<>();
+            pendingQueryFutures.put(((IMixinDataQueryHandler) handler).currentTransactionId(), future);
+            return future;
         }
+        throw new IllegalStateException("Not connected to a server");
     }
 
     public @Nullable Entity getServerEntity(Entity entity)
