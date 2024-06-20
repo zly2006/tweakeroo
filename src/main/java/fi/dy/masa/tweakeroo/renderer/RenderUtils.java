@@ -148,11 +148,8 @@ public class RenderUtils
                 shulkerBoxBlock = (ShulkerBoxBlock) blockTmp;
             }
 
-            if (world instanceof ServerWorld realWorld)
-            {
-                inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(realWorld, pos);
-            }
-            else if (world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
+            inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
+            if (world.isClient && world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
                     && !FeatureToggle.TWEAK_DISABLE_SERVER_DATA_SYNC.getBooleanValue())
             {
                 inv = ServerDataSyncer.getInstance().getBlockInventory(world, pos);
