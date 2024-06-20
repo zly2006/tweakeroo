@@ -5,6 +5,7 @@ import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -151,9 +152,9 @@ public class RenderUtils
             {
                 inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(realWorld, pos);
             }
-            else if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+            else if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue() && world.getBlockState(pos).getBlock() instanceof BlockEntityProvider)
             {
-                inv = ServerDataSyncer.INSTANCE.getBlockInventory(world, pos);
+                inv = ServerDataSyncer.getInstance().getBlockInventory(world, pos);
             }
         }
         else if (trace.getType() == HitResult.Type.ENTITY)
@@ -163,7 +164,7 @@ public class RenderUtils
             if (entity.getWorld().isClient &&
                 FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
             {
-                Entity serverEntity = ServerDataSyncer.INSTANCE.getServerEntity(entity);
+                Entity serverEntity = ServerDataSyncer.getInstance().getServerEntity(entity);
                 if (serverEntity != null)
                 {
                     entity = serverEntity;

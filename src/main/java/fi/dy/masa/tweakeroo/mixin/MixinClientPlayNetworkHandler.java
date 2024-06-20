@@ -1,5 +1,6 @@
 package fi.dy.masa.tweakeroo.mixin;
 
+import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,6 +37,19 @@ public abstract class MixinClientPlayNetworkHandler
         if (FeatureToggle.TWEAK_PRINT_DEATH_COORDINATES.getBooleanValue() && mc.player != null)
         {
             MiscUtils.printDeathCoordinates(mc);
+        }
+    }
+
+    @Inject(
+            method = "onCommandTree",
+            at = @At("RETURN")
+    )
+    private void onCommandTree(CallbackInfo ci)
+    {
+        if (FeatureToggle.TWEAK_SERVER_ENTITY_DATA_SYNCER.getBooleanValue())
+        {
+            // when the player becomes OP, the server sends the command tree to the client
+            ServerDataSyncer.getInstance().recheckOpStatus();
         }
     }
 }
