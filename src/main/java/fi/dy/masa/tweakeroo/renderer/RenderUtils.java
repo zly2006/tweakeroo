@@ -202,7 +202,7 @@ public class RenderUtils
         int x = xCenter - 52 / 2;
         int y = yCenter - 92;
 
-        if (inv != null && !inv.isEmpty())
+        if (inv != null && inv.size() > 0)
         {
             final boolean isHorse = (entityLivingBase instanceof AbstractHorseEntity);
             final int totalSlots = isHorse ? inv.size() - 2 : inv.size();
@@ -259,11 +259,6 @@ public class RenderUtils
 
         Inventory inv = mc.player.getInventory();
 
-        if (inv.isEmpty())
-        {
-            return;
-        }
-
         int x = GuiUtils.getScaledWindowWidth() / 2 - 176 / 2;
         int y = GuiUtils.getScaledWindowHeight() / 2 + 10;
         int slotOffsetX = 8;
@@ -284,11 +279,6 @@ public class RenderUtils
         }
 
         Inventory inv = mc.player.getInventory();
-
-        if (inv.isEmpty())
-        {
-            return;
-        }
 
         final int xCenter = GuiUtils.getScaledWindowWidth() / 2;
         final int yCenter = GuiUtils.getScaledWindowHeight() / 2;
