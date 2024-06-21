@@ -200,7 +200,6 @@ public class ServerDataSyncer
     {
         if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
-            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return CompletableFuture.completedFuture(null);
         }
 
@@ -259,7 +258,6 @@ public class ServerDataSyncer
     {
         if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
-            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return CompletableFuture.completedFuture(null);
         }
 
@@ -311,6 +309,7 @@ public class ServerDataSyncer
         }
         else if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
+            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return null;
         }
 
