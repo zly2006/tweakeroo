@@ -1,12 +1,16 @@
 package fi.dy.masa.tweakeroo.mixin;
 
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.mojang.authlib.GameProfile;
-import fi.dy.masa.tweakeroo.config.Configs;
-import fi.dy.masa.tweakeroo.config.FeatureToggle;
-import fi.dy.masa.tweakeroo.util.CameraEntity;
-import fi.dy.masa.tweakeroo.util.CameraUtils;
-import fi.dy.masa.tweakeroo.util.DummyMovementInput;
-import fi.dy.masa.tweakeroo.util.InventoryUtils;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -17,15 +21,12 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import fi.dy.masa.tweakeroo.config.Configs;
+import fi.dy.masa.tweakeroo.config.FeatureToggle;
+import fi.dy.masa.tweakeroo.util.CameraEntity;
+import fi.dy.masa.tweakeroo.util.CameraUtils;
+import fi.dy.masa.tweakeroo.util.DummyMovementInput;
+import fi.dy.masa.tweakeroo.util.InventoryUtils;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
@@ -35,9 +36,13 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
 
     @Shadow public float prevNauseaIntensity;
     @Shadow public float nauseaIntensity;
+    @Unique
     private final DummyMovementInput dummyMovementInput = new DummyMovementInput(null);
+    @Unique
     private Input realInput;
+    @Unique
     private float realNauseaIntensity;
+    @Unique
     private ItemStack autoSwitchElytraChestplate = ItemStack.EMPTY;
 
     private MixinClientPlayerEntity(ClientWorld world, GameProfile profile)
@@ -120,22 +125,28 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
         }
     }
 
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", shift = At.Shift.BEFORE, target = "Lnet/minecraft/client/network/ClientPlayerEntity;getEquippedStack(Lnet/minecraft/entity/EquipmentSlot;)Lnet/minecraft/item/ItemStack;"))
+    @Inject(method = "tickMovement",
+            at = @At(value = "INVOKE", shift = At.Shift.BEFORE,
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;getEquippedStack(Lnet/minecraft/entity/EquipmentSlot;)Lnet/minecraft/item/ItemStack;"))
     private void onFallFlyingCheckChestSlot(CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            // auto switch if it is not elytra or is totally broken.
-            if (getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) == false
-                    || getEquippedStack(EquipmentSlot.CHEST).getDamage() > getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
+            // auto switch if it is not elytra after falling more than 20 blocks, or is totally broken.
+            // This also shouldn't activate on the Ground if the Chest Equipment is EMPTY, or not an Elytra
+            // To be swapped back.
+            if ((!this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) && this.fallDistance > 20.0f)
+                || (this.getEquippedStack(EquipmentSlot.CHEST).getDamage() > this.getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
+                && (!this.getEquippedStack(EquipmentSlot.CHEST).isEmpty() || this.autoSwitchElytraChestplate.isOf(Items.ELYTRA)))
             {
-                autoSwitchElytraChestplate = getEquippedStack(EquipmentSlot.CHEST).copy();
+                this.autoSwitchElytraChestplate = this.getEquippedStack(EquipmentSlot.CHEST).copy();
                 InventoryUtils.swapElytraWithChestPlate(this);
             }
         }
-        else {
+        else
+        {
             // reset auto switch item if the feature is disabled.
-            autoSwitchElytraChestplate = ItemStack.EMPTY;
+            this.autoSwitchElytraChestplate = ItemStack.EMPTY;
         }
     }
 
@@ -143,16 +154,16 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     private void onMovementEnd(CallbackInfo ci) {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            if (!autoSwitchElytraChestplate.isEmpty() && !isFallFlying() && getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
+            if (!this.autoSwitchElytraChestplate.isEmpty() && !this.isFallFlying() && this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
             {
-                if (playerScreenHandler.getCursorStack().isEmpty())
+                if (this.playerScreenHandler.getCursorStack().isEmpty())
                 {
-                    int targetSlot = InventoryUtils.findSlotWithItem(playerScreenHandler, autoSwitchElytraChestplate, true, false);
+                    int targetSlot = InventoryUtils.findSlotWithItem(this.playerScreenHandler, this.autoSwitchElytraChestplate, true, false);
 
                     if (targetSlot >= 0)
                     {
                         InventoryUtils.swapItemToEquipmentSlot(this, EquipmentSlot.CHEST, targetSlot);
-                        autoSwitchElytraChestplate = ItemStack.EMPTY;
+                        this.autoSwitchElytraChestplate = ItemStack.EMPTY;
                     }
                 }
             }
