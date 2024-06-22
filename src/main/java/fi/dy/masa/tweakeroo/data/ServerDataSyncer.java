@@ -10,8 +10,10 @@ import com.mojang.datafixers.util.Either;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
+import net.minecraft.block.CrafterBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.block.entity.CrafterBlockEntity;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.DataQueryHandler;
@@ -24,7 +26,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
-import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.InventoryUtils;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import fi.dy.masa.tweakeroo.mixin.IMixinDataQueryHandler;
 
@@ -136,7 +138,6 @@ public class ServerDataSyncer
         }
         else if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
-            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return null;
         }
 
@@ -168,6 +169,10 @@ public class ServerDataSyncer
                     }
                 }
             }
+            else if (state.getBlock() instanceof CrafterBlock && inv instanceof CrafterBlockEntity ce)
+            {
+                return InventoryUtils.getAsInventory(ce.getHeldStacks());
+            }
 
             return inv;
         }
@@ -191,6 +196,10 @@ public class ServerDataSyncer
                     }
                 }
             }
+        }
+        else if (state.getBlock() instanceof CrafterBlock)
+        {
+            syncBlockEntity(world, pos);
         }
 
         return null;
@@ -309,7 +318,6 @@ public class ServerDataSyncer
         }
         else if (yesIAmOp.isPresent() && !yesIAmOp.get())
         {
-            InfoUtils.printActionbarMessage("tweakeroo.message.warning.server_data_syncer.not_op");
             return null;
         }
 

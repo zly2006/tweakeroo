@@ -6,6 +6,7 @@ import org.joml.Matrix4fStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
+import net.minecraft.block.CrafterBlock;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -145,6 +146,7 @@ public class RenderUtils
 
         Inventory inv = null;
         ShulkerBoxBlock shulkerBoxBlock = null;
+        CrafterBlock crafterBlock = null;
         LivingEntity entityLivingBase = null;
 
         if (trace.getType() == HitResult.Type.BLOCK)
@@ -158,8 +160,9 @@ public class RenderUtils
             }
 
             inv = fi.dy.masa.malilib.util.InventoryUtils.getInventory(world, pos);
+
             if (world.isClient && world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
-                    && FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
+                && FeatureToggle.TWEAK_SERVER_DATA_SYNC.getBooleanValue())
             {
                 inv = ServerDataSyncer.getInstance().getBlockInventory(world, pos);
             }
