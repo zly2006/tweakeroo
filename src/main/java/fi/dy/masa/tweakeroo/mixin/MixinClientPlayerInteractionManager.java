@@ -32,6 +32,8 @@ public abstract class MixinClientPlayerInteractionManager
 {
     @Shadow @Final private MinecraftClient client;
 
+    @Shadow private int blockBreakingCooldown;
+
     @Inject(method = "interactItem", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V"),
@@ -148,6 +150,11 @@ public abstract class MixinClientPlayerInteractionManager
     @Inject(method = "updateBlockBreakingProgress", at = @At("HEAD"), cancellable = true) // MCP: onPlayerDamageBlock
     private void handleBreakingRestriction2(BlockPos pos, Direction side, CallbackInfoReturnable<Boolean> cir)
     {
+        if (FeatureToggle.TWEAK_NO_BREAK_BLOCK_CD.getBooleanValue())
+        {
+            blockBreakingCooldown = 0;
+        }
+
         if (CameraUtils.shouldPreventPlayerInputs() ||
             PlacementTweaks.isPositionAllowedByBreakingRestriction(pos, side) == false)
         {
