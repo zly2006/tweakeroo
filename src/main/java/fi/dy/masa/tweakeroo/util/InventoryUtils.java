@@ -2,7 +2,6 @@ package fi.dy.masa.tweakeroo.util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.ObjectInputFilter;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -10,6 +9,7 @@ import java.util.regex.Pattern;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -862,15 +862,72 @@ public class InventoryUtils
 
         Predicate<ItemStack> stackFilterChestPlate = (s) -> s.getItem() instanceof ArmorItem && ((ArmorItem) s.getItem()).getSlotType() == EquipmentSlot.CHEST;
         Predicate<ItemStack> stackFilterElytra = (s) -> s.getItem() instanceof ElytraItem && ElytraItem.isUsable(s);
-        Predicate<ItemStack> stackFilter = (currentStack.isEmpty() || stackFilterChestPlate.test(currentStack)) ? stackFilterElytra : stackFilterChestPlate;
+        boolean switchingToElytra = (currentStack.isEmpty() || stackFilterChestPlate.test(currentStack));
+        Predicate<ItemStack> stackFilter = switchingToElytra ? stackFilterElytra : stackFilterChestPlate;
         Predicate<ItemStack> finalFilter = (s) -> s.isEmpty() == false && stackFilter.test(s) && s.getDamage() < s.getMaxDamage() - 10;
-        int targetSlot = findSuitableSlot(container, finalFilter);
+
+        int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
+            if (!finalFilter.test(testedStack)) return false;
+            if (!finalFilter.test(previousBestMatch)) return true;
+            if (switchingToElytra)
+            {
+                if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) < getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
+                {
+                    return false;
+                }
+                if (testedStack.getDamage() > previousBestMatch.getDamage())
+                {
+                     return false;
+                }
+            }
+            else
+            {
+                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) > getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
+                {
+                    return false;
+                }
+                if (getEnchantmentLevel(previousBestMatch, Enchantments.PROTECTION) > getEnchantmentLevel(testedStack, Enchantments.PROTECTION))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }, UniformIntProvider.create(9, container.slots.size() - 1));
 
         if (targetSlot >= 0)
         {
             //targetSlots.sort();
             swapItemToEquipmentSlot(player, EquipmentSlot.CHEST, targetSlot);
         }
+    }
+
+    private static double getArmorAndArmorToughnessValue(ItemStack stack, double base, AttributeModifierSlot slot)
+    {
+        final double[] total = {base};
+
+        stack.applyAttributeModifier(slot, (entry, modifier) -> {
+            if (entry.getKey().orElseThrow() == EntityAttributes.GENERIC_ARMOR
+                || entry.getKey().orElseThrow() == EntityAttributes.GENERIC_ARMOR_TOUGHNESS)
+            {
+                switch (modifier.operation())
+                {
+                    case ADD_VALUE:
+                        total[0] += modifier.value();
+                        break;
+                    case ADD_MULTIPLIED_BASE:
+                        total[0] += modifier.value() * base;
+                        break;
+                    case ADD_MULTIPLIED_TOTAL:
+                        total[0] += modifier.value() * total[0];
+                        break;
+                    default:
+                        throw new MatchException(null, null);
+                }
+            }
+        });
+
+        return total[0];
     }
 
     /**
