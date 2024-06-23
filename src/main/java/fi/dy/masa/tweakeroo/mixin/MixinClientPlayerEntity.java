@@ -132,12 +132,15 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            // auto switch if it is not elytra after falling more than 20 blocks, or is totally broken.
-            // This also shouldn't activate on the Ground if the Chest Equipment is EMPTY, or not an Elytra
-            // To be swapped back.
+            // Sakura's version calculating fall distance...
+            /*
             if ((!this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) && this.fallDistance > 20.0f)
                 || (this.getEquippedStack(EquipmentSlot.CHEST).getDamage() > this.getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
                 && (!this.getEquippedStack(EquipmentSlot.CHEST).isEmpty() || this.autoSwitchElytraChestplate.isOf(Items.ELYTRA)))
+             */
+            // auto switch if it is not elytra or is totally broken.
+            if (getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) == false ||
+                getEquippedStack(EquipmentSlot.CHEST).getDamage() > getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
             {
                 this.autoSwitchElytraChestplate = this.getEquippedStack(EquipmentSlot.CHEST).copy();
                 InventoryUtils.swapElytraWithChestPlate(this);
