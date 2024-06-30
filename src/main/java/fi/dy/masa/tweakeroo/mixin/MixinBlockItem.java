@@ -27,7 +27,6 @@ public abstract class MixinBlockItem extends Item implements IItemStackLimit
         super(builder);
     }
 
-    @Shadow protected abstract BlockState getPlacementState(ItemPlacementContext context);
     @Shadow protected abstract boolean canPlace(ItemPlacementContext context, BlockState state);
     @Shadow public abstract Block getBlock();
 
@@ -41,31 +40,10 @@ public abstract class MixinBlockItem extends Item implements IItemStackLimit
             if (stateOrig != null && this.canPlace(ctx, stateOrig))
             {
                 UseContext context = UseContext.from(ctx, ctx.getHand());
-                cir.setReturnValue(PlacementHandler.getStateForPlacement(stateOrig, context));
+                cir.setReturnValue(PlacementHandler.applyPlacementProtocolToPlacementState(stateOrig, context));
             }
         }
     }
-
-    /*
-    @Redirect(method = "place(Lnet/minecraft/item/ItemPlacementContext)Lnet/minecraft/util/ActionResult;",
-                at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/item/BlockItem;getBlockState(" +
-                             "Lnet/minecraft/item/ItemPlacementContext;)" +
-                             "Lnet/minecraft/block/BlockState;"))
-    private BlockState modifyPlacementState(BlockItem item, ItemPlacementContext ctx)
-    {
-        BlockState stateOriginal = this.getBlockState(ctx);
-
-        // the state can be null in 1.13+
-        if (stateOriginal != null && Configs.Generic.CLIENT_PLACEMENT_ROTATION.getBooleanValue())
-        {
-            UseContext context = UseContext.from(ctx, Hand.MAIN);
-            return PlacementHandler.getStateForPlacement(stateOriginal, context);
-        }
-
-        return stateOriginal;
-    }
-    */
 
     @Override
     public int getMaxStackSize(ItemStack stack)

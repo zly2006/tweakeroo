@@ -17,4 +17,14 @@ public class Tweakeroo implements ModInitializer
     {
         InitializationHandler.getInstance().registerInitializationHandler(new InitHandler());
     }
+
+    /*
+    public static void debugLog(String msg, Object... args)
+    {
+        if (Configs.Generic.DEBUG_LOGGING.getBooleanValue())
+        {
+            Tweakeroo.logger.info(msg, args);
+        }
+    }
+     */
 }
