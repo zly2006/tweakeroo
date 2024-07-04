@@ -1,9 +1,12 @@
 package fi.dy.masa.tweakeroo.tweaks;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.enums.Orientation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -536,7 +539,6 @@ public class PlacementTweaks
                 handleAccurate = true;
             }
 
-            //if ((handleAccurate || afterClicker) && Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue())
             if ((handleAccurate || afterClicker) && Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue())
             {
                 // Carpet-Extra mod accurate block placement protocol support
@@ -547,6 +549,19 @@ public class PlacementTweaks
                 if (handleAccurate && isFacingValidFor(facing, stack))
                 {
                     x = posNew.getX() + relX + 2 + (facing.getId() * 2);
+                }
+                else if (handleAccurate && isFacingValidForOrientation(facing, stack))
+                {
+                    int facingIndex = getOrientationFacingIndex(stack, facing);
+
+                    if (facingIndex > 0)
+                    {
+                        x = posNew.getX() + relX + 2 + (facingIndex * 2);
+                    }
+                    else
+                    {
+                        x = posNew.getX() + relX + 2 + (facing.getId() * 2);
+                    }
                 }
 
                 if (afterClicker)
@@ -752,9 +767,8 @@ public class PlacementTweaks
 
         // Carpet-Extra mod accurate block placement protocol support
         if (flexible && rotation && accurate == false &&
-            //Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
             Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
-            isFacingValidFor(facing, stackOriginal))
+            (isFacingValidFor(facing, stackOriginal) || isFacingValidForOrientation(facing, stackOriginal)))
         {
             facing = facing.getOpposite(); // go from block face to click on to the requested facing
             //double relX = hitVecIn.x - posIn.getX();
@@ -800,7 +814,6 @@ public class PlacementTweaks
         {
             //System.out.printf("processRightClickBlockWrapper() PLACE @ %s, side: %s, hit: %s\n", posIn, sideIn, hitVecIn);
             BlockHitResult context = new BlockHitResult(hitVecIn, sideIn, posIn, false);
-            //Tweakeroo.debugLog("processRightClickBlockWrapper(): BHR pos: {}, side {}, type: {}, inside {}", context.getBlockPos().toShortString(), context.getSide().toString(), context.getType().toString(), context.isInsideBlock());
             result = controller.interactBlock(player, hand, context);
         }
 
@@ -815,7 +828,6 @@ public class PlacementTweaks
         tryRestockHand(player, hand, stackOriginal);
 
         if (FeatureToggle.TWEAK_AFTER_CLICKER.getBooleanValue() &&
-            //Configs.Generic.CARPET_ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() == false &&
             Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() == false &&
             world.getBlockState(posPlacement) != stateBefore)
         {
@@ -1048,11 +1060,49 @@ public class PlacementTweaks
                     return ((DirectionProperty) prop).getValues().contains(facing);
                 }
             }
+        }
+
+        return false;
+    }
+
+    private static boolean isFacingValidForOrientation(Direction facing, ItemStack stack)
+    {
+        Item item = stack.getItem();
+
+        if (stack.isEmpty() == false && item instanceof BlockItem)
+        {
+            Block block = ((BlockItem) item).getBlock();
+            BlockState state = block.getDefaultState();
 
             return state.contains(Properties.ORIENTATION);
         }
 
         return false;
+    }
+
+    private static int getOrientationFacingIndex(ItemStack stackIn, Direction facing)
+    {
+        if (stackIn.getItem() instanceof BlockItem blockItem)
+        {
+            BlockState defaultState = blockItem.getBlock().getDefaultState();
+
+            if (defaultState.contains(Properties.ORIENTATION))
+            {
+                List<Orientation> list = Arrays.stream(Orientation.values()).toList();
+
+                for (int i = 0; i < list.size(); i++)
+                {
+                    Orientation o = list.get(i);
+
+                    if (o.getFacing().equals(facing))
+                    {
+                        return i;
+                    }
+                }
+            }
+        }
+
+        return -1;
     }
 
     private static BlockPos getPlacementPositionForTargetedPosition(World world, BlockPos pos, Direction side, ItemPlacementContext useContext)
