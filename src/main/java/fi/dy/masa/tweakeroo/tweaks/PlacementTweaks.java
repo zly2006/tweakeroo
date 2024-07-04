@@ -498,12 +498,11 @@ public class PlacementTweaks
                 handleAccurate = true;
 
                 //System.out.printf("accurate - REVERSE - facingOrig: %s, facingNew: %s\n", facing, facing.getOpposite());
-                /*
-                if (accurateIn || flexible == false || rotation == false)
+                //if (accurateIn || flexible == false || rotation == false)
+                if (((BlockItem) stack.getItem()).getBlock() == Blocks.OBSERVER)
                 {
                     facing = facing.getOpposite();
                 }
-                 */
             }
             else if (flexible == false || rotation == false)
             {
