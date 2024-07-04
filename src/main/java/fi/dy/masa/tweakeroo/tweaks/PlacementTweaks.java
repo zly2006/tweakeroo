@@ -768,7 +768,7 @@ public class PlacementTweaks
         // Carpet-Extra mod accurate block placement protocol support
         if (flexible && rotation && accurate == false &&
             Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
-            (isFacingValidFor(facing, stackOriginal) || isFacingValidForOrientation(facing, stackOriginal)))
+            isFacingValidFor(facing, stackOriginal))
         {
             facing = facing.getOpposite(); // go from block face to click on to the requested facing
             //double relX = hitVecIn.x - posIn.getX();
@@ -780,7 +780,34 @@ public class PlacementTweaks
                 x += afterClickerClickCount * 16;
             }
 
-            //System.out.printf("processRightClickBlockWrapper req facing: %s, x: %.3f, pos: %s, sideIn: %s\n", facing, x, posIn, sideIn);
+            //System.out.printf("processRightClickBlockWrapper/Direction req facing: %s, x: %.3f, pos: %s, sideIn: %s\n", facing, x, posIn, sideIn);
+            hitVecIn = new Vec3d(x, hitVecIn.y, hitVecIn.z);
+        }
+        else if (flexible && rotation && accurate == false &&
+            Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue() &&
+            isFacingValidForOrientation(facing, stackOriginal))
+        {
+            facing = facing.getOpposite(); // go from block face to click on to the requested facing
+            //double relX = hitVecIn.x - posIn.getX();
+            //double x = posIn.getX() + relX + 2 + (facing.getId() * 2);
+
+            int facingIndex = getOrientationFacingIndex(stackOriginal, facing);
+            double x;
+            if (facingIndex >= 0)
+            {
+                x = posIn.getX() + 2 + (facingIndex * 2);
+            }
+            else
+            {
+                x = posIn.getX() + 2 + (facing.getId() * 2);
+            }
+
+            if (FeatureToggle.TWEAK_AFTER_CLICKER.getBooleanValue())
+            {
+                x += afterClickerClickCount * 16;
+            }
+
+            //System.out.printf("processRightClickBlockWrapper/Orientation req facing: %s, x: %.3f, pos: %s, sideIn: %s\n", facing, x, posIn, sideIn);
             hitVecIn = new Vec3d(x, hitVecIn.y, hitVecIn.z);
         }
 
