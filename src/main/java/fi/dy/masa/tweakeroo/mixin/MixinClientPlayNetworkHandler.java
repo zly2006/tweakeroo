@@ -1,6 +1,15 @@
 package fi.dy.masa.tweakeroo.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.client.network.ClientCommonNetworkHandler;
+import net.minecraft.client.network.ClientConnectionState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -14,10 +23,19 @@ import fi.dy.masa.tweakeroo.data.DataManager;
 import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
 import fi.dy.masa.tweakeroo.tweaks.PlacementTweaks;
 import fi.dy.masa.tweakeroo.util.MiscUtils;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayNetworkHandler.class)
-public abstract class MixinClientPlayNetworkHandler
+public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkHandler
 {
+    protected MixinClientPlayNetworkHandler(MinecraftClient client, ClientConnection connection, ClientConnectionState connectionState)
+    {
+        super(client, connection, connectionState);
+    }
+
+    @Unique
+    private static Hand totemOfUndyingRestockHand;
+
     @Inject(method = "onScreenHandlerSlotUpdate", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/screen/ScreenHandler;setStackInSlot(IILnet/minecraft/item/ItemStack;)V"),
@@ -27,6 +45,23 @@ public abstract class MixinClientPlayNetworkHandler
         if (PlacementTweaks.shouldSkipSlotSync(packet.getSlot(), packet.getStack()))
         {
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "onScreenHandlerSlotUpdate", at = @At("RETURN"))
+    private void afterHandleSetSlot(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo ci)
+    {
+        if (FeatureToggle.TWEAK_HAND_RESTOCK.getBooleanValue() && totemOfUndyingRestockHand != null)
+        {
+            if (this.client.player == null)
+            {
+                totemOfUndyingRestockHand = null;
+            }
+            else if (this.client.player.getStackInHand(totemOfUndyingRestockHand).isEmpty())
+            {
+                PlacementTweaks.tryRestockHand(this.client.player, totemOfUndyingRestockHand, Items.TOTEM_OF_UNDYING.getDefaultStack());
+                totemOfUndyingRestockHand = null;
+            }
         }
     }
 
@@ -65,6 +100,19 @@ public abstract class MixinClientPlayNetworkHandler
         else if (payload.getId().id().equals(DataManager.SERVUX_ENTITY_DATA))
         {
             DataManager.getInstance().setHasServuxServer(true);
+        }
+    }
+
+    @Inject(
+        method = "getActiveTotemOfUndying",
+        at = @At(value = "RETURN", ordinal = 0)
+    )
+    private static void onPlayerUseTotemOfUndying(PlayerEntity player, CallbackInfoReturnable<ItemStack> cir, @Local Hand hand)
+    {
+        if (FeatureToggle.TWEAK_HAND_RESTOCK.getBooleanValue())
+        {
+            totemOfUndyingRestockHand = hand;
+            PlacementTweaks.cacheStackInHand(hand);
         }
     }
 }
