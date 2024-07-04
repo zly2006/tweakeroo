@@ -491,6 +491,20 @@ public class PlacementTweaks
                 }
                 //System.out.printf("accurate - IN - facingOrig: %s, facingNew: %s\n", facing, facing.getOpposite());
             }
+            else if (accurateReverse)
+            {
+                facing = sideIn;
+                hitPart = null;
+                handleAccurate = true;
+
+                //System.out.printf("accurate - REVERSE - facingOrig: %s, facingNew: %s\n", facing, facing.getOpposite());
+                /*
+                if (accurateIn || flexible == false || rotation == false)
+                {
+                    facing = facing.getOpposite();
+                }
+                 */
+            }
             else if (flexible == false || rotation == false)
             {
                 if (stack.getItem() instanceof BlockItem)
@@ -525,18 +539,6 @@ public class PlacementTweaks
                 {
                     facing = player.getHorizontalFacing();
                 }
-            }
-
-            if (accurateReverse)
-            {
-                //System.out.printf("accurate - REVERSE - facingOrig: %s, facingNew: %s\n", facing, facing.getOpposite());
-                if (accurateIn || flexible == false || rotation == false)
-                {
-                    facing = facing.getOpposite();
-                }
-
-                hitPart = null;
-                handleAccurate = true;
             }
 
             if ((handleAccurate || afterClicker) && Configs.Generic.ACCURATE_PLACEMENT_PROTOCOL.getBooleanValue())
