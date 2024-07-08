@@ -4,6 +4,9 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiFunction;
+
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
@@ -32,36 +35,27 @@ public class PlacementHandler
             // BooleanProperty:
             // INVERTED - DaylightDetector
             // OPEN - Barrel, Door, FenceGate, Trapdoor
-            // PERSISTENT - Leaves
-            // CAN_SUMMON - Shrieker
             Properties.INVERTED,
             Properties.OPEN,
-            Properties.PERSISTENT,
-            Properties.CAN_SUMMON,
             // EnumProperty:
             // ATTACHMENT - Bell
             // AXIS - Pillar
-            // BED_PART - Beds
             // BLOCK_HALF - Stairs, Trapdoor
             // BLOCK_FACE - Button, Grindstone, Lever
             // CHEST_TYPE - Chest
             // COMPARATOR_MODE - Comparator
             // DOOR_HINGE - Door
-            // DOUBLE_BLOCK_HALF - Doors, Plants
             // ORIENTATION - Crafter
             // RAIL_SHAPE / STRAIGHT_RAIL_SHAPE - Rails
             // SLAB_TYPE - Slab - PARTIAL ONLY: TOP and BOTTOM, not DOUBLE
             // STAIR_SHAPE - Stairs (needed to get the correct state, otherwise the player facing would be a factor)
-            // BLOCK_FACE - Button, Grindstone, Lever
             Properties.ATTACHMENT,
             Properties.AXIS,
-            Properties.BED_PART,
             Properties.BLOCK_HALF,
             Properties.BLOCK_FACE,
             Properties.CHEST_TYPE,
             Properties.COMPARATOR_MODE,
             Properties.DOOR_HINGE,
-            Properties.DOUBLE_BLOCK_HALF,
             Properties.ORIENTATION,
             Properties.RAIL_SHAPE,
             Properties.STRAIGHT_RAIL_SHAPE,
@@ -77,6 +71,16 @@ public class PlacementHandler
             Properties.NOTE,
             Properties.ROTATION
     );
+
+    public static final ImmutableMap<Property<?>, BiFunction<BlockState, UseContext, Boolean>> PROPERTY_VALIDATORS = ImmutableMap.<Property<?>, BiFunction<BlockState, UseContext, Boolean>>builder()
+            .put(Properties.HORIZONTAL_FACING, (value, ctx) -> {
+                if (value.getProperties().contains(Properties.BLOCK_FACE))
+                {
+                    return value.canPlaceAt(ctx.getWorld(), ctx.getPos());
+                }
+                return true;
+            })
+            .build();
 
     public static EasyPlacementProtocol getEffectiveProtocolVersion()
     {
@@ -185,9 +189,10 @@ public class PlacementHandler
         //System.out.printf("hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
         //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
 
+        BlockState oldState = state;
         if (protocolValue < 0)
         {
-            return state;
+            return oldState;
         }
 
         @Nullable DirectionProperty property = fi.dy.masa.malilib.util.BlockUtils.getFirstDirectionProperty(state);
@@ -197,6 +202,18 @@ public class PlacementHandler
         {
             //System.out.printf("applying: 0x%08X\n", protocolValue);
             state = applyDirectionProperty(state, context, property, protocolValue);
+            var validator = PROPERTY_VALIDATORS.get(property);
+
+            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+            {
+                System.out.printf("validator passed for \"%s\"\n", property.getName());
+                oldState = state;
+            }
+            else
+            {
+                System.out.printf("validator failed for \"%s\"\n", property.getName());
+                state = oldState;
+            }
 
             if (state == null)
             {
@@ -227,7 +244,7 @@ public class PlacementHandler
                     int requiredBits = MathHelper.floorLog2(MathHelper.smallestEncompassingPowerOfTwo(list.size()));
                     int bitMask = ~(0xFFFFFFFF << requiredBits);
                     int valueIndex = protocolValue & bitMask;
-                    //System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);
+                    System.out.printf("trying to apply valInd: %d, bits: %d, prot val: 0x%08X\n", valueIndex, requiredBits, protocolValue);
 
                     if (valueIndex >= 0 && valueIndex < list.size())
                     {
@@ -236,8 +253,20 @@ public class PlacementHandler
                         if (state.get(prop).equals(value) == false &&
                             value != SlabType.DOUBLE) // don't allow duping slabs by forcing a double slab via the protocol
                         {
-                            //System.out.printf("applying %s: %s\n", prop.getName(), value);
+                            System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
+
+                            BiFunction<BlockState, UseContext, Boolean> validator = PROPERTY_VALIDATORS.get(prop);
+                            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+                            {
+                                System.out.printf("validator passed for \"%s\"\n", prop.getName());
+                                oldState = state;
+                            }
+                            else
+                            {
+                                System.out.printf("validator failed for \"%s\"\n", prop.getName());
+                                state = oldState;
+                            }
                         }
 
                         protocolValue >>>= requiredBits;
@@ -274,7 +303,7 @@ public class PlacementHandler
             }
         }
 
-        //System.out.printf("plop facing: %s -> %s (raw: %d, dec: %d)\n", facingOrig, facing, protocolValue, decodedFacingIndex);
+        System.out.printf("plop facing: %s -> %s (raw: %d, dec: %d)\n", facingOrig, facing, protocolValue, decodedFacingIndex);
 
         if (facing != facingOrig && property.getValues().contains(facing))
         {
