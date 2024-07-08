@@ -48,19 +48,14 @@ public abstract class MixinClientPlayerInteractionManager
         }
     }
 
-    @Inject(method = "method_41929",
-            slice = @Slice(from = @At(value = "INVOKE",
-                                      target = "Lnet/minecraft/item/ItemStack;use(" +
-                                               "Lnet/minecraft/world/World;" +
-                                               "Lnet/minecraft/entity/player/PlayerEntity;" +
-                                               "Lnet/minecraft/util/Hand;" +
-                                               ")Lnet/minecraft/util/TypedActionResult;")),
-            at = @At("RETURN"))
-    private void onProcessRightClickPost(Hand hand, PlayerEntity playerEntity,
-                                         MutableObject<?> mutableObject, int sequence,
-                                         CallbackInfoReturnable<Packet<?>> cir)
+    @Inject(method = "interactItem",
+            at = @At("TAIL"))
+    private void onProcessRightClickPost(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir)
     {
-        PlacementTweaks.onProcessRightClickPost(playerEntity, hand);
+        if (cir.getReturnValue().isAccepted())
+        {
+            PlacementTweaks.onProcessRightClickPost(player, hand);
+        }
     }
 
     @Inject(method = "interactEntity(" +
