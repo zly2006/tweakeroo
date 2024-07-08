@@ -35,10 +35,11 @@ public class PlacementHandler
             // BooleanProperty:
             // INVERTED - DaylightDetector
             // OPEN - Barrel, Door, FenceGate, Trapdoor
+            // PERSISTENT - Leaves (Disabled)
             Properties.INVERTED,
             Properties.OPEN,
+            //Properties.PERSISTENT,
             // EnumProperty:
-            // ATTACHMENT - Bell
             // AXIS - Pillar
             // BLOCK_HALF - Stairs, Trapdoor
             // BLOCK_FACE - Button, Grindstone, Lever
@@ -49,7 +50,7 @@ public class PlacementHandler
             // RAIL_SHAPE / STRAIGHT_RAIL_SHAPE - Rails
             // SLAB_TYPE - Slab - PARTIAL ONLY: TOP and BOTTOM, not DOUBLE
             // STAIR_SHAPE - Stairs (needed to get the correct state, otherwise the player facing would be a factor)
-            Properties.ATTACHMENT,
+            // BLOCK_FACE - Button, Grindstone, Lever
             Properties.AXIS,
             Properties.BLOCK_HALF,
             Properties.BLOCK_FACE,
@@ -73,7 +74,8 @@ public class PlacementHandler
     );
 
     public static final ImmutableMap<Property<?>, BiFunction<BlockState, UseContext, Boolean>> PROPERTY_VALIDATORS = ImmutableMap.<Property<?>, BiFunction<BlockState, UseContext, Boolean>>builder()
-            .put(Properties.HORIZONTAL_FACING, (value, ctx) -> {
+            .put(Properties.HORIZONTAL_FACING, (value, ctx) ->
+            {
                 if (value.getProperties().contains(Properties.BLOCK_FACE))
                 {
                     return value.canPlaceAt(ctx.getWorld(), ctx.getPos());
@@ -186,10 +188,10 @@ public class PlacementHandler
     public static <T extends Comparable<T>> BlockState applyPlacementProtocolV3(BlockState state, UseContext context)
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
+        BlockState oldState = state;
         //System.out.printf("hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
         //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
 
-        BlockState oldState = state;
         if (protocolValue < 0)
         {
             return oldState;
