@@ -39,6 +39,7 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     @Unique private Input realInput;
     @Unique private float realNauseaIntensity;
     @Unique private ItemStack autoSwitchElytraChestplate = ItemStack.EMPTY;
+    @Unique private boolean lastTickFallFlying = false;
 
     private MixinClientPlayerEntity(ClientWorld world, GameProfile profile)
     {
@@ -156,9 +157,9 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            if (!this.isFallFlying() && this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
+            if (lastTickFallFlying && !this.isFallFlying() && this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
             {
-                if (!this.autoSwitchElytraChestplate.isEmpty())
+                if (!this.autoSwitchElytraChestplate.isEmpty() && !this.autoSwitchElytraChestplate.isOf(Items.ELYTRA))
                 {
                     if (this.playerScreenHandler.getCursorStack().isEmpty())
                     {
@@ -177,6 +178,7 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
                     InventoryUtils.swapElytraWithChestPlate(this);
                 }
             }
+            lastTickFallFlying = this.isFallFlying();
         }
     }
 
