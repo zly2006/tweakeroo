@@ -279,7 +279,16 @@ public class PlacementHandler
             Tweakeroo.logger.warn("Exception trying to apply placement protocol value", e);
         }
 
-        return state;
+        if (state.canPlaceAt(context.getWorld(), context.getPos()))
+        {
+            System.out.printf("validator passed for \"%s\"\n", state);
+            return state;
+        }
+        else
+        {
+            System.out.printf("validator failed for \"%s\"\n", state);
+            return null;
+        }
     }
 
     private static BlockState applyDirectionProperty(BlockState state, UseContext context,
