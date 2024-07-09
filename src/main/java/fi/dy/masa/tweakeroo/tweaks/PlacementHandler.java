@@ -32,7 +32,7 @@ import fi.dy.masa.tweakeroo.util.EasyPlacementProtocol;
 public class PlacementHandler
 {
     public static final ImmutableSet<Property<?>> WHITELISTED_PROPERTIES = ImmutableSet.of(
-// BooleanProperty:
+            // BooleanProperty:
             // INVERTED - DaylightDetector
             // OPEN - Barrel, Door, FenceGate, Trapdoor
             // PERSISTENT - Leaves (Disabled)
