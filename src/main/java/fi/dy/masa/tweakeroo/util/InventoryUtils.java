@@ -964,9 +964,14 @@ public class InventoryUtils
         return isHotbarSlot(slot.id);
     }
 
-    private static boolean isHotbarSlot(int slot)
+    public static boolean isHotbarSlot(int slot)
     {
         return slot >= 36 && slot < (36 + PlayerInventory.getHotbarSize());
+    }
+
+    public static boolean isOffhandSlot(int slot)
+    {
+        return slot == (36 + PlayerInventory.getHotbarSize());
     }
 
     private static void swapItemToHand(PlayerEntity player, Hand hand, int slotNumber)
