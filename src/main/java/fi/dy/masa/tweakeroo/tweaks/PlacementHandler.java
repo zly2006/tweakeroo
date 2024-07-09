@@ -32,7 +32,7 @@ import fi.dy.masa.tweakeroo.util.EasyPlacementProtocol;
 public class PlacementHandler
 {
     public static final ImmutableSet<Property<?>> WHITELISTED_PROPERTIES = ImmutableSet.of(
-            // BooleanProperty:
+// BooleanProperty:
             // INVERTED - DaylightDetector
             // OPEN - Barrel, Door, FenceGate, Trapdoor
             // PERSISTENT - Leaves (Disabled)
@@ -40,6 +40,7 @@ public class PlacementHandler
             Properties.OPEN,
             //Properties.PERSISTENT,
             // EnumProperty:
+            // ATTACHMENT - Bells
             // AXIS - Pillar
             // BLOCK_HALF - Stairs, Trapdoor
             // BLOCK_FACE - Button, Grindstone, Lever
@@ -51,6 +52,7 @@ public class PlacementHandler
             // SLAB_TYPE - Slab - PARTIAL ONLY: TOP and BOTTOM, not DOUBLE
             // STAIR_SHAPE - Stairs (needed to get the correct state, otherwise the player facing would be a factor)
             // BLOCK_FACE - Button, Grindstone, Lever
+            Properties.ATTACHMENT,
             Properties.AXIS,
             Properties.BLOCK_HALF,
             Properties.BLOCK_FACE,
