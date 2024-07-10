@@ -82,4 +82,13 @@ public abstract class MixinLivingEntity extends Entity
             ci.cancel();
         }
     }
+
+    @Inject(method = "takeKnockback", at = @At("HEAD"), cancellable = true)
+    private void takeKnockback(double strength, double x, double z, CallbackInfo ci)
+    {
+        if (FeatureToggle.TWEAK_NO_KNOCKBACK.getBooleanValue() && (Object) this instanceof ClientPlayerEntity player)
+        {
+            ci.cancel();
+        }
+    }
 }

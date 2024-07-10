@@ -54,6 +54,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     TWEAK_FLEXIBLE_BLOCK_PLACEMENT  ("tweakFlexibleBlockPlacement",         false, "",    "Enables placing blocks in different orientations\nor with an offset, while holding down the\nhotkeys for those modes."),
     TWEAK_CROSSHAIR_IGNORE_ENTITIES ("tweakCrosshairIgnoreEntities",        false, "",    "Ignores entities when aiming with the crosshair,\nand instead targets the block behind the entity"),
     TWEAK_NO_ENTITY_PUSH            ("tweakNoEntityPush",                   false, "",    "You will not be pushed by entities when this is enabled"),
+    TWEAK_NO_KNOCKBACK               ("tweakNoKnockback",                   false, "",    "You will not be knocked back when being attacked"),
     TWEAK_FREE_CAMERA               ("tweakFreeCamera",                     false, "",    "Enables a free camera mode, similar to spectator mode,\nbut where the player will remain in place where\nyou first activate the free camera mode"),
     TWEAK_GAMMA_OVERRIDE            ("tweakGammaOverride",                  false, "",    "Overrides the video settings gamma value with\nthe one set in the Generic configs"),
     TWEAK_HAND_RESTOCK              ("tweakHandRestock",                    false, "",    "Enables swapping a new stack to the main or the offhand\nwhen the previous stack runs out"),

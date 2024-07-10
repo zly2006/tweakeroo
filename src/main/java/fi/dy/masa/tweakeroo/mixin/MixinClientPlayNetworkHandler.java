@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -102,6 +103,18 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
                     PlacementTweaks.onProcessRightClickPost(this.client.player, hand);
                 }
             }
+        }
+    }
+
+    @Inject(
+        method = "onEntityVelocityUpdate",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void end(EntityVelocityUpdateS2CPacket packet, CallbackInfo ci) {
+        if (FeatureToggle.TWEAK_NO_KNOCKBACK.getBooleanValue())
+        {
+            ci.cancel();
         }
     }
 }
