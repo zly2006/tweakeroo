@@ -73,4 +73,13 @@ public abstract class MixinLivingEntity extends Entity
             }
         }
     }
+
+    @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
+    private void bePushed(Entity entity, CallbackInfo ci)
+    {
+        if (FeatureToggle.TWEAK_NO_ENTITY_PUSH.getBooleanValue() && (Object) this instanceof ClientPlayerEntity player)
+        {
+            ci.cancel();
+        }
+    }
 }

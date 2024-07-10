@@ -96,6 +96,11 @@ public abstract class MixinGameRenderer
             predicate = predicate.and((entityIn) -> (entityIn instanceof AbstractDecorationEntity) == false);
         }
 
+        if (FeatureToggle.TWEAK_CROSSHAIR_IGNORE_ENTITIES.getBooleanValue())
+        {
+            predicate = entity -> false;
+        }
+
         return predicate;
     }
 
