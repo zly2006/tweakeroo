@@ -552,7 +552,7 @@ public class PlacementTweaks
                 }
                 else if (handleAccurate && isFacingValidForOrientation(facing, stack))
                 {
-                    int facingIndex = getOrientationFacingIndex(stack, facing);
+                    int facingIndex = getOrientationFacingIndex(stack, facing, player.getHorizontalFacing().getOpposite());
 
                     if (facingIndex > 0)
                     {
@@ -791,7 +791,7 @@ public class PlacementTweaks
             //double relX = hitVecIn.x - posIn.getX();
             //double x = posIn.getX() + relX + 2 + (facing.getId() * 2);
 
-            int facingIndex = getOrientationFacingIndex(stackOriginal, facing);
+            int facingIndex = getOrientationFacingIndex(stackOriginal, facing, player.getHorizontalFacing().getOpposite());
             double x;
             if (facingIndex >= 0)
             {
@@ -1107,7 +1107,7 @@ public class PlacementTweaks
         return false;
     }
 
-    private static int getOrientationFacingIndex(ItemStack stackIn, Direction facing)
+    private static int getOrientationFacingIndex(ItemStack stackIn, Direction facing, Direction horizontalFacing)
     {
         if (stackIn.getItem() instanceof BlockItem blockItem)
         {
@@ -1123,7 +1123,17 @@ public class PlacementTweaks
 
                     if (o.getFacing().equals(facing))
                     {
-                        return i;
+                        if (facing.getAxis().isVertical())
+                        {
+                            if (o.getRotation() == horizontalFacing)
+                            {
+                                return i;
+                            }
+                        }
+                        else
+                        {
+                            return i;
+                        }
                     }
                 }
             }
