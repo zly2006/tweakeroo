@@ -20,7 +20,7 @@ import fi.dy.masa.tweakeroo.config.Configs;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import fi.dy.masa.tweakeroo.renderer.RenderUtils;
 
-@Mixin(InGameHud.class)
+@Mixin(value = InGameHud.class, priority = 1005)
 public abstract class MixinInGameHud
 {
     @Shadow @Final private PlayerListHud playerListHud;
@@ -38,11 +38,11 @@ public abstract class MixinInGameHud
 
     @Inject(method = "renderCrosshair", at = @At(value = "INVOKE",
                 target = "Lnet/minecraft/client/gui/hud/DebugHud;shouldShowDebugHud()Z", ordinal = 0), cancellable = true)
-    private void overrideCursorRender(CallbackInfo ci)
+    private void overrideCursorRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_F3_CURSOR.getBooleanValue())
         {
-            RenderUtils.renderDirectionsCursor(0, this.client.getRenderTickCounter().getTickDelta(false));
+            RenderUtils.renderDirectionsCursor(context);
             ci.cancel();
         }
     }
