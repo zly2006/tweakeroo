@@ -407,7 +407,7 @@ public class Callbacks
             }
             else if (key == Hotkeys.SWAP_ELYTRA_CHESTPLATE.getKeybind())
             {
-                InventoryUtils.swapElytraWithChestPlate(this.mc.player);
+                InventoryUtils.swapElytraAndChestPlate(this.mc.player);
                 return true;
             }
             else if (key == Hotkeys.TOGGLE_GRAB_CURSOR.getKeybind())
