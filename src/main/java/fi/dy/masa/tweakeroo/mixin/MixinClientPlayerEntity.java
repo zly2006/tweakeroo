@@ -129,22 +129,14 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            // Sakura's version calculating fall distance...
-            //if ((!this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) && this.fallDistance > 20.0f)
-
-            // Auto switch if it is not elytra after falling, or is totally broken.
-            // This also shouldn't activate on the Ground if the Chest Equipment is EMPTY,
-            // or not an Elytra to be swapped back.
-            //
-            // !isOnGround(): Minecraft also check elytra even if the player is on the ground, skip it.
-            // !isSwimming(): Check if the Player is swimming so, it doesn't perform the Elytra Swap while underwater.
-            if (!this.isOnGround() && !this.isSwimming()
-                && (!this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
-                || (this.getEquippedStack(EquipmentSlot.CHEST).getDamage() > this.getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
-                && (!this.getEquippedStack(EquipmentSlot.CHEST).isEmpty() || this.autoSwitchElytraChestplate.isOf(Items.ELYTRA)))
+            // PlayerEntity#checkFallFlying
+            if (!this.isOnGround() && !this.isFallFlying() && !this.isInFluid() && !this.hasStatusEffect(StatusEffects.LEVITATION))
             {
-                this.autoSwitchElytraChestplate = this.getEquippedStack(EquipmentSlot.CHEST).copy();
-                InventoryUtils.swapElytraWithChestPlate(this);
+                if (!this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA) ||
+                    this.getEquippedStack(EquipmentSlot.CHEST).getDamage() > this.getEquippedStack(EquipmentSlot.CHEST).getMaxDamage() - 10)
+                {
+                    InventoryUtils.equipBestElytra(this);
+                }
             }
         }
         else
@@ -155,33 +147,30 @@ public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity
     }
 
 
-    @Inject(method = "onTrackedDataSet", at = @At("RETURN"))
+    @Inject(method = "onTrackedDataSet", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/ElytraSoundInstance;<init>(Lnet/minecraft/client/network/ClientPlayerEntity;)V"))
     private void onStopFlying(TrackedData<?> data, CallbackInfo ci)
     {
         if (FeatureToggle.TWEAK_AUTO_SWITCH_ELYTRA.getBooleanValue())
         {
-            if (FLAGS.equals(data) && this.falling)
+            if (this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
             {
-                if (!this.isFallFlying() && this.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA))
+                if (!this.autoSwitchElytraChestplate.isEmpty() && !this.autoSwitchElytraChestplate.isOf(Items.ELYTRA))
                 {
-                    if (!this.autoSwitchElytraChestplate.isEmpty() && !this.autoSwitchElytraChestplate.isOf(Items.ELYTRA))
+                    if (this.playerScreenHandler.getCursorStack().isEmpty())
                     {
-                        if (this.playerScreenHandler.getCursorStack().isEmpty())
-                        {
-                            int targetSlot = InventoryUtils.findSlotWithItem(this.playerScreenHandler, this.autoSwitchElytraChestplate, true, false);
+                        int targetSlot = InventoryUtils.findSlotWithItem(this.playerScreenHandler, this.autoSwitchElytraChestplate, true, false);
 
-                            if (targetSlot >= 0)
-                            {
-                                InventoryUtils.swapItemToEquipmentSlot(this, EquipmentSlot.CHEST, targetSlot);
-                                this.autoSwitchElytraChestplate = ItemStack.EMPTY;
-                            }
+                        if (targetSlot >= 0)
+                        {
+                            InventoryUtils.swapItemToEquipmentSlot(this, EquipmentSlot.CHEST, targetSlot);
+                            this.autoSwitchElytraChestplate = ItemStack.EMPTY;
                         }
                     }
-                    else
-                    {
-                        // if cached previous item is empty, try to swap back to the default chest plate.
-                        InventoryUtils.swapElytraWithChestPlate(this);
-                    }
+                }
+                else
+                {
+                    // if cached previous item is empty, try to swap back to the default chest plate.
+                    InventoryUtils.swapElytraAndChestPlate(this);
                 }
             }
         }
