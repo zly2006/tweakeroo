@@ -18,7 +18,7 @@ import fi.dy.masa.tweakeroo.Tweakeroo;
 
 public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfigBoolean>
 {
-    TWEAK_ACCURATE_BLOCK_PLACEMENT  ("tweakAccurateBlockPlacement",         false, "",    "Enables a simpler version of Flexible placement, similar to\nthe Carpet mod, so basically either facing into or out\nfrom the block face clicked on."),
+    TWEAK_ACCURATE_BLOCK_PLACEMENT  ("tweakAccurateBlockPlacement",         false, "",    "tweakeroo.config.feature_toggle.comment.tweakAccurateBlockPlacement", "", "tweakeroo.config.feature_toggle.name.tweakAccurateBlockPlacement"),
     TWEAK_AFTER_CLICKER             ("tweakAfterClicker",                   false, "",    KeybindSettings.INGAME_BOTH, "Enables a \"after clicker\" tweak, which does automatic right\nclicks on the just-placed block.\nUseful for example for Repeaters (setting the delay).\nTo quickly adjust the value, scroll while\nholding down the tweak toggle keybind."),
     TWEAK_AIM_LOCK                  ("tweakAimLock",                        false, "",    "Enables an aim lock, locking the yaw and pitch rotations\nto the current values.\nThis is separate from the snap aim lock,\nwhich locks them to the snapped value.\nThis allows locking them \"freely\" to the current value."),
     TWEAK_ANGEL_BLOCK               ("tweakAngelBlock",                     false, "",    "Enables an \"Angel Block\" tweak, which allows\nplacing blocks in mid-air in Creative mode.\nPowered by \"Flotato\" technology."),
@@ -111,6 +111,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     private final String name;
     private final String comment;
     private final String prettyName;
+    private final String translatedName;
     private final IKeybind keybind;
     private final boolean defaultValueBoolean;
     private final boolean singlePlayer;
@@ -124,30 +125,50 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
 
     FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment)
     {
-        this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment);
+        this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment, name);
     }
 
     FeatureToggle(String name, boolean defaultValue, String defaultHotkey, KeybindSettings settings, String comment)
     {
-        this(name, defaultValue, false, defaultHotkey, settings, comment);
+        this(name, defaultValue, false, defaultHotkey, settings, comment, name);
+    }
+
+    FeatureToggle(String name, boolean defaultValue, String defaultHotkey, KeybindSettings settings, String comment, String translatedName)
+    {
+        this(name, defaultValue, false, defaultHotkey, settings, comment, translatedName);
     }
 
     FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment)
     {
-        this(name, defaultValue, singlePlayer, defaultHotkey, settings, comment, StringUtils.splitCamelCase(name.substring(5)));
+        this(name, defaultValue, singlePlayer, defaultHotkey, settings, comment, StringUtils.splitCamelCase(name.substring(5)), name);
+    }
+
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment, String translatedName)
+    {
+        this(name, defaultValue, singlePlayer, defaultHotkey, settings, comment, StringUtils.splitCamelCase(name.substring(5)), translatedName);
     }
 
     FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment, String prettyName)
     {
-        this(name, defaultValue, false, defaultHotkey, comment, prettyName);
+        this(name, defaultValue, false, defaultHotkey, comment, prettyName, name);
+    }
+
+    FeatureToggle(String name, boolean defaultValue, String defaultHotkey, String comment, String prettyName, String translatedName)
+    {
+        this(name, defaultValue, false, defaultHotkey, comment, prettyName, translatedName);
     }
 
     FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment, String prettyName)
     {
-        this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment, prettyName);
+        this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment, prettyName, name);
     }
 
-    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment, String prettyName)
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, String comment, String prettyName, String translatedName)
+    {
+        this(name, defaultValue, singlePlayer, defaultHotkey, KeybindSettings.DEFAULT, comment, prettyName, translatedName);
+    }
+
+    FeatureToggle(String name, boolean defaultValue, boolean singlePlayer, String defaultHotkey, KeybindSettings settings, String comment, String prettyName, String translatedName)
     {
         this.name = name;
         this.valueBoolean = defaultValue;
@@ -155,6 +176,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
         this.singlePlayer = singlePlayer;
         this.comment = comment;
         this.prettyName = prettyName;
+        this.translatedName = translatedName;
         this.keybind = KeybindMulti.fromStorageString(defaultHotkey, settings);
         this.keybind.setCallback(new KeyCallbackToggleBooleanConfigWithMessage(this));
     }
@@ -174,7 +196,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     @Override
     public String getConfigGuiDisplayName()
     {
-        String name = StringUtils.getTranslatedOrFallback("config.name." + this.getName().toLowerCase(), this.getName());
+        String name = StringUtils.getTranslatedOrFallback(this.getTranslatedName(), this.getName());
 
         if (this.singlePlayer)
         {
@@ -225,7 +247,7 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     @Override
     public String getComment()
     {
-        String comment = StringUtils.getTranslatedOrFallback("config.comment." + this.getName().toLowerCase(), this.comment);
+        String comment = StringUtils.getTranslatedOrFallback(this.comment, this.comment);
 
         if (comment != null && this.singlePlayer)
         {
@@ -233,6 +255,12 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
         }
 
         return comment;
+    }
+
+    @Override
+    public String getTranslatedName()
+    {
+        return this.translatedName;
     }
 
     @Override
