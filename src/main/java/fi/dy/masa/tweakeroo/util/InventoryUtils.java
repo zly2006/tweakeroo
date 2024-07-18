@@ -865,7 +865,37 @@ public class InventoryUtils
         return -1;
     }
 
-    public static void swapElytraWithChestPlate(@Nullable PlayerEntity player)
+    public static void equipBestElytra(PlayerEntity player)
+    {
+        if (player == null || GuiUtils.getCurrentScreen() != null)
+        {
+            return;
+        }
+
+        ScreenHandler container = player.currentScreenHandler;
+
+        Predicate<ItemStack> filter = (s) ->  s.getItem() instanceof ElytraItem && ElytraItem.isUsable(s) && s.getDamage() < s.getMaxDamage() - 10;
+        int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
+            if (!filter.test(testedStack)) return false;
+            if (!filter.test(previousBestMatch)) return true;
+            if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) > getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
+            {
+                return true;
+            }
+            if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) < getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
+            {
+                return false;
+            }
+            return testedStack.getDamage() <= previousBestMatch.getDamage();
+        }, UniformIntProvider.create(9, container.slots.size() - 1));
+
+        if (targetSlot >= 0)
+        {
+            swapItemToEquipmentSlot(player, EquipmentSlot.CHEST, targetSlot);
+        }
+    }
+
+    public static void swapElytraAndChestPlate(@Nullable PlayerEntity player)
     {
         if (player == null || GuiUtils.getCurrentScreen() != null)
         {
@@ -876,44 +906,33 @@ public class InventoryUtils
         ItemStack currentStack = player.getEquippedStack(EquipmentSlot.CHEST);
 
         Predicate<ItemStack> stackFilterChestPlate = (s) -> s.getItem() instanceof ArmorItem && ((ArmorItem) s.getItem()).getSlotType() == EquipmentSlot.CHEST;
-        Predicate<ItemStack> stackFilterElytra = (s) -> s.getItem() instanceof ElytraItem && ElytraItem.isUsable(s);
-        boolean switchingToElytra = (currentStack.isEmpty() || stackFilterChestPlate.test(currentStack));
-        Predicate<ItemStack> stackFilter = switchingToElytra ? stackFilterElytra : stackFilterChestPlate;
-        Predicate<ItemStack> finalFilter = (s) -> s.isEmpty() == false && stackFilter.test(s) && s.getDamage() < s.getMaxDamage() - 10;
 
-        int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
-            if (!finalFilter.test(testedStack)) return false;
-            if (!finalFilter.test(previousBestMatch)) return true;
-            if (switchingToElytra)
-            {
-                if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) < getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
+        if (currentStack.isEmpty() || stackFilterChestPlate.test(currentStack))
+        {
+            equipBestElytra(player);
+        }
+        else
+        {
+            Predicate<ItemStack> finalFilter = (s) -> stackFilterChestPlate.test(s) && s.getDamage() < s.getMaxDamage() - 10;
+
+            int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
+                if (!finalFilter.test(testedStack)) return false;
+                if (!finalFilter.test(previousBestMatch)) return true;
+                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) < getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
                 {
-                    return false;
+                    return true;
                 }
-                if (testedStack.getDamage() > previousBestMatch.getDamage())
-                {
-                     return false;
-                }
-            }
-            else
-            {
                 if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) > getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
                 {
                     return false;
                 }
-                if (getEnchantmentLevel(previousBestMatch, Enchantments.PROTECTION) > getEnchantmentLevel(testedStack, Enchantments.PROTECTION))
-                {
-                    return false;
-                }
+                return getEnchantmentLevel(previousBestMatch, Enchantments.PROTECTION) <= getEnchantmentLevel(testedStack, Enchantments.PROTECTION);
+            }, UniformIntProvider.create(9, container.slots.size() - 1));
+
+            if (targetSlot >= 0)
+            {
+                swapItemToEquipmentSlot(player, EquipmentSlot.CHEST, targetSlot);
             }
-
-            return true;
-        }, UniformIntProvider.create(9, container.slots.size() - 1));
-
-        if (targetSlot >= 0)
-        {
-            //targetSlots.sort();
-            swapItemToEquipmentSlot(player, EquipmentSlot.CHEST, targetSlot);
         }
     }
 
