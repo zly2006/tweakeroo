@@ -417,6 +417,10 @@
     "tweakeroo.config.hotkey.comment.writeMapsAsImages": "Writes all the currently available maps as images\nto the 'config/tweakeroo/map_images/<worldname>/' directory",
     "tweakeroo.config.hotkey.comment.zoomActivate": "Zoom activation hotkey",
 
+    "tweakeroo.config.feature_toggle.name.tweakAccurateBlockPlacement": "[TEST] tweakAccurateBlockPlacement",
+
+    "tweakeroo.config.feature_toggle.comment.tweakAccurateBlockPlacement": "[TEST] Enables a simpler version of Flexible placement, similar to\nthe Carpet mod, so basically either facing into or out\nfrom the block face clicked on.",
+
     "tweakeroo.gui.button.config_gui.disables": "Yeets",
     "tweakeroo.gui.button.config_gui.fixes": "Fixes",
     "tweakeroo.gui.button.config_gui.generic": "Generic",
