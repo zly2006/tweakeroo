@@ -878,6 +878,10 @@ public class InventoryUtils
         int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
             if (!filter.test(testedStack)) return false;
             if (!filter.test(previousBestMatch)) return true;
+            if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) > getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
+            {
+                return true;
+            }
             if (getEnchantmentLevel(testedStack, Enchantments.UNBREAKING) < getEnchantmentLevel(previousBestMatch, Enchantments.UNBREAKING))
             {
                 return false;
@@ -914,6 +918,10 @@ public class InventoryUtils
             int targetSlot = findSlotWithBestItemMatch(container, (testedStack, previousBestMatch) -> {
                 if (!finalFilter.test(testedStack)) return false;
                 if (!finalFilter.test(previousBestMatch)) return true;
+                if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) < getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
+                {
+                    return true;
+                }
                 if (getArmorAndArmorToughnessValue(previousBestMatch, 1, AttributeModifierSlot.CHEST) > getArmorAndArmorToughnessValue(testedStack, 1, AttributeModifierSlot.CHEST))
                 {
                     return false;
