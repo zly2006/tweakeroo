@@ -284,6 +284,7 @@ public class Configs implements IConfigHandler
         public static final ConfigBooleanHotkeyed       DISABLE_BAT_SPAWNING            = new ConfigBooleanClient  ("disableBatSpawning",                   false, "", "tweakeroo.config.disable.comment.disableBatSpawning").translatedName("tweakeroo.config.disable.name.disableBatSpawning");
         public static final ConfigBooleanHotkeyed       DISABLE_BEACON_BEAM_RENDERING   = new ConfigBooleanHotkeyed("disableBeaconBeamRendering",           false, "", "tweakeroo.config.disable.comment.disableBeaconBeamRendering").translatedName("tweakeroo.config.disable.name.disableBeaconBeamRendering");
         public static final ConfigBooleanHotkeyed       DISABLE_BLOCK_BREAK_PARTICLES   = new ConfigBooleanHotkeyed("disableBlockBreakingParticles",        false, "", "tweakeroo.config.disable.comment.disableBlockBreakingParticles").translatedName("tweakeroo.config.disable.name.disableBlockBreakingParticles");
+        public static final ConfigBooleanHotkeyed       DISABLE_BLOCK_BREAK_COOLDOWN    = new ConfigBooleanHotkeyed("disableBlockBreakCooldown",            false, "", "tweakeroo.config.disable.comment.disableBlockBreakCooldown").translatedName("tweakeroo.config.disable.name.disableBlockBreakCooldown");
         public static final ConfigBooleanHotkeyed       DISABLE_DOUBLE_TAP_SPRINT       = new ConfigBooleanHotkeyed("disableDoubleTapSprint",               false, "", "tweakeroo.config.disable.comment.disableDoubleTapSprint").translatedName("tweakeroo.config.disable.name.disableDoubleTapSprint");
         public static final ConfigBooleanHotkeyed       DISABLE_BOSS_BAR                = new ConfigBooleanHotkeyed("disableBossBar",                       false, "", "tweakeroo.config.disable.comment.disableBossBar").translatedName("tweakeroo.config.disable.name.disableBossBar");
         public static final ConfigBooleanHotkeyed       DISABLE_BOSS_FOG                = new ConfigBooleanHotkeyed("disableBossFog",                       false, "", "tweakeroo.config.disable.comment.disableBossFog").translatedName("tweakeroo.config.disable.name.disableBossFog");
@@ -330,6 +331,7 @@ public class Configs implements IConfigHandler
                 DISABLE_BAT_SPAWNING,
                 DISABLE_BEACON_BEAM_RENDERING,
                 DISABLE_BLOCK_BREAK_PARTICLES,
+                DISABLE_BLOCK_BREAK_COOLDOWN,
                 DISABLE_DOUBLE_TAP_SPRINT,
                 DISABLE_BOSS_BAR,
                 DISABLE_BOSS_FOG,
