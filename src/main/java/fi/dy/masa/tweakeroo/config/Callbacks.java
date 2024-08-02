@@ -10,7 +10,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.config.IConfigBoolean;
+import fi.dy.masa.malilib.config.IHotkeyTogglable;
 import fi.dy.masa.malilib.config.options.ConfigBoolean;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.hotkeys.IHotkeyCallback;
@@ -112,6 +114,11 @@ public class Callbacks
         FeatureToggle.TWEAK_PLACEMENT_LIMIT.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_PLACEMENT_LIMIT));
         FeatureToggle.TWEAK_SNAP_AIM.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_SNAP_AIM));
         FeatureToggle.TWEAK_ZOOM.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_ZOOM));
+
+        FeatureToggle.TWEAK_PERIODIC_ATTACK.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_PERIODIC_ATTACK));
+        FeatureToggle.TWEAK_PERIODIC_USE.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_PERIODIC_USE));
+        FeatureToggle.TWEAK_PERIODIC_HOLD_ATTACK.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_PERIODIC_HOLD_ATTACK));
+        FeatureToggle.TWEAK_PERIODIC_HOLD_USE.getKeybind().setCallback(KeyCallbackAdjustableFeature.createCallback(FeatureToggle.TWEAK_PERIODIC_HOLD_USE));
 
         Configs.Disable.DISABLE_RENDERING_SCAFFOLDING.setValueChangeCallback((cfg) -> mc.worldRenderer.reload());
     }
@@ -430,11 +437,15 @@ public class Callbacks
             {
                 if (action == KeyAction.PRESS)
                 {
+                    InfoUtils.printActionbarMessage("tweakeroo.message.toggled_zoom_activate_on",
+                            String.format("%s%.1f%s", GuiBase.TXT_GREEN, Configs.Generic.ZOOM_FOV.getDoubleValue(), GuiBase.TXT_RST));
                     MiscUtils.onZoomActivated();
                 }
                 else
                 {
                     MiscUtils.onZoomDeactivated();
+                    InfoUtils.printActionbarMessage("tweakeroo.message.toggled_zoom_activate_off",
+                            String.format("%s%.1f%s", GuiBase.TXT_GREEN, Configs.Generic.ZOOM_FOV.getDoubleValue(), GuiBase.TXT_RST));
                 }
             }
 
@@ -659,8 +670,66 @@ public class Callbacks
                 }
                 else
                 {
+                    //String strValue = String.format("%s%.1f%s", preGreen, Configs.Generic.ZOOM_FOV.getDoubleValue(), rst);
+                    //InfoUtils.printActionbarMessage("tweakeroo.message.toggled_zoom_off", strStatus, strValue);
                     InfoUtils.printActionbarMessage("tweakeroo.message.toggled", prettyName, strStatus);
                 }
+            }
+            else if (key == FeatureToggle.TWEAK_PERIODIC_ATTACK.getKeybind())
+            {
+                if (enabled)
+                {
+                    MiscUtils.onPeriodicAttackActivated();
+                }
+                else
+                {
+                    MiscUtils.onPeriodicAttackDeactivated();
+                }
+
+                String strValue = String.format("%s%01d%s", preGreen, Configs.Generic.PERIODIC_ATTACK_INTERVAL.getIntegerValue(), rst);
+                InfoUtils.printActionbarMessage("tweakeroo.message.toggled_periodic", prettyName, strStatus, strValue);
+            }
+            else if (key == FeatureToggle.TWEAK_PERIODIC_USE.getKeybind())
+            {
+                if (enabled)
+                {
+                    MiscUtils.onPeriodicUseActivated();
+                }
+                else
+                {
+                    MiscUtils.onPeriodicUseDeactivated();
+                }
+
+                String strValue = String.format("%s%01d%s", preGreen, Configs.Generic.PERIODIC_USE_INTERVAL.getIntegerValue(), rst);
+                InfoUtils.printActionbarMessage("tweakeroo.message.toggled_periodic", prettyName, strStatus, strValue);
+            }
+            else if (key == FeatureToggle.TWEAK_PERIODIC_HOLD_ATTACK.getKeybind())
+            {
+                if (enabled)
+                {
+                    MiscUtils.onPeriodicHoldAttackActivated();
+                }
+                else
+                {
+                    MiscUtils.onPeriodicHoldAttackDeactivated();
+                }
+
+                String strValue = String.format("%s%01d%s", preGreen, Configs.Generic.PERIODIC_HOLD_ATTACK_INTERVAL.getIntegerValue(), rst);
+                InfoUtils.printActionbarMessage("tweakeroo.message.toggled_periodic", prettyName, strStatus, strValue);
+            }
+            else if (key == FeatureToggle.TWEAK_PERIODIC_HOLD_USE.getKeybind())
+            {
+                if (enabled)
+                {
+                    MiscUtils.onPeriodicHoldUseActivated();
+                }
+                else
+                {
+                    MiscUtils.onPeriodicHoldUseDeactivated();
+                }
+
+                String strValue = String.format("%s%01d%s", preGreen, Configs.Generic.PERIODIC_HOLD_USE_INTERVAL.getIntegerValue(), rst);
+                InfoUtils.printActionbarMessage("tweakeroo.message.toggled_periodic", prettyName, strStatus, strValue);
             }
 
             return true;
