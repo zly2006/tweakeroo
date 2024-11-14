@@ -146,6 +146,7 @@ public class Configs implements IConfigHandler
                 POTION_WARNING_BENEFICIAL_ONLY,
                 REMEMBER_FLEXIBLE,
                 SHULKER_DISPLAY_BACKGROUND_COLOR,
+                SHULKER_DISPLAY_ENDER_CHEST,
                 SHULKER_DISPLAY_REQUIRE_SHIFT,
                 SLOT_SYNC_WORKAROUND,
                 SLOT_SYNC_WORKAROUND_ALWAYS,

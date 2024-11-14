@@ -7,18 +7,22 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.profiler.Profiler;
+import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.InventoryOverlay;
-import fi.dy.masa.malilib.util.ActiveMode;
-import fi.dy.masa.malilib.util.Color4f;
-import fi.dy.masa.malilib.util.InventoryUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.tweakeroo.config.Configs;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import fi.dy.masa.tweakeroo.config.Hotkeys;
@@ -27,6 +31,19 @@ import fi.dy.masa.tweakeroo.util.RayTraceUtils;
 
 public class RenderHandler implements IRenderer
 {
+    private static final RenderHandler INSTANCE = new RenderHandler();
+    private final MinecraftClient mc;
+
+    public RenderHandler()
+    {
+        this.mc = MinecraftClient.getInstance();
+    }
+
+    public static RenderHandler getInstance()
+    {
+        return INSTANCE;
+    }
+
     @Override
     public void onRenderGameOverlayPost(DrawContext drawContext)
     {
@@ -52,8 +69,6 @@ public class RenderHandler implements IRenderer
             {
                 RenderUtils.renderInventoryOverlay(context, drawContext);
             }
-
-            //RenderUtils.renderInventoryOverlay(mc, drawContext);
         }
 
         if (FeatureToggle.TWEAK_PLAYER_INVENTORY_PEEK.getBooleanValue() &&
@@ -97,6 +112,27 @@ public class RenderHandler implements IRenderer
                 (Configs.Generic.SHULKER_DISPLAY_REQUIRE_SHIFT.getBooleanValue() == false || GuiBase.isShiftDown()))
             {
                 fi.dy.masa.malilib.render.RenderUtils.renderShulkerBoxPreview(stack, x, y, Configs.Generic.SHULKER_DISPLAY_BACKGROUND_COLOR.getBooleanValue(), drawContext);
+            }
+        }
+        else if (stack.isOf(Items.ENDER_CHEST) && Configs.Generic.SHULKER_DISPLAY_ENDER_CHEST.getBooleanValue())
+        {
+            if (FeatureToggle.TWEAK_SHULKERBOX_DISPLAY.getBooleanValue() &&
+                (Configs.Generic.SHULKER_DISPLAY_REQUIRE_SHIFT.getBooleanValue() == false || GuiBase.isShiftDown()))
+            {
+                World world = WorldUtils.getBestWorld(this.mc);
+                if (world == null || this.mc.player == null)
+                {
+                    return;
+                }
+                PlayerEntity player = world.getPlayerByUuid(this.mc.player.getUuid());
+
+                if (player != null)
+                {
+                    EnderChestInventory inv = player.getEnderChestInventory();
+                    NbtCompound nbt = new NbtCompound();
+                    nbt.put(NbtKeys.ENDER_ITEMS, inv.toNbtList(world.getRegistryManager()));
+                    fi.dy.masa.malilib.render.RenderUtils.renderNbtItemsPreview(stack, nbt, x, y, false, drawContext);
+                }
             }
         }
         else if (stack.getComponents().contains(DataComponentTypes.BUNDLE_CONTENTS) && InventoryUtils.bundleHasItems(stack))
