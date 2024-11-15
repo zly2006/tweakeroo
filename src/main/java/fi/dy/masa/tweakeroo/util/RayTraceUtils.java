@@ -35,10 +35,7 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
 import fi.dy.masa.malilib.render.InventoryOverlay;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.EntityUtils;
-import fi.dy.masa.malilib.util.NbtKeys;
-import fi.dy.masa.malilib.util.WorldUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.tweakeroo.data.ServerDataSyncer;
 import fi.dy.masa.tweakeroo.mixin.IMixinAbstractHorseEntity;
 import fi.dy.masa.tweakeroo.mixin.IMixinPiglinEntity;
@@ -234,7 +231,7 @@ public class RayTraceUtils
 
                     if (enderPair != null && enderPair.getRight() != null && enderPair.getRight().contains(NbtKeys.ENDER_ITEMS))
                     {
-                        enderItems = InventoryUtils.getPlayerEnderItemsFromNbt(enderPair.getRight(), world.getRegistryManager());
+                        enderItems = fi.dy.masa.malilib.util.InventoryUtils.getPlayerEnderItemsFromNbt(enderPair.getRight(), world.getRegistryManager());
                     }
                     else
                     {
