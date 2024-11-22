@@ -959,27 +959,25 @@ public class PlacementTweaks
     {
         if (originalSide.getAxis().isVertical())
         {
-            switch (hitPart)
+            return switch (hitPart)
             {
-                case LEFT:      return playerFacingH.rotateYClockwise();
-                case RIGHT:     return playerFacingH.rotateYCounterclockwise();
-                case BOTTOM:    return originalSide == Direction.UP   ? playerFacingH : playerFacingH.getOpposite();
-                case TOP:       return originalSide == Direction.DOWN ? playerFacingH : playerFacingH.getOpposite();
-                case CENTER:    return originalSide.getOpposite();
-                default:        return originalSide;
-            }
+                case LEFT -> playerFacingH.rotateYClockwise();
+                case RIGHT -> playerFacingH.rotateYCounterclockwise();
+                case BOTTOM -> originalSide == Direction.UP ? playerFacingH : playerFacingH.getOpposite();
+                case TOP -> originalSide == Direction.DOWN ? playerFacingH : playerFacingH.getOpposite();
+                case CENTER -> originalSide.getOpposite();
+            };
         }
         else
         {
-            switch (hitPart)
+            return switch (hitPart)
             {
-                case LEFT:      return originalSide.rotateYCounterclockwise();
-                case RIGHT:     return originalSide.rotateYClockwise();
-                case BOTTOM:    return Direction.UP;
-                case TOP:       return Direction.DOWN;
-                case CENTER:    return originalSide.getOpposite();
-                default:        return originalSide;
-            }
+                case LEFT -> originalSide.rotateYCounterclockwise();
+                case RIGHT -> originalSide.rotateYClockwise();
+                case BOTTOM -> Direction.UP;
+                case TOP -> Direction.DOWN;
+                case CENTER -> originalSide.getOpposite();
+            };
         }
     }
 
@@ -1054,16 +1052,15 @@ public class PlacementTweaks
 
         if (restrictionEnabled)
         {
-            switch (mode)
+            return switch (mode)
             {
-                case COLUMN:    return isNewPositionValidForColumnMode(pos, posFirst, sideFirst);
-                case DIAGONAL:  return isNewPositionValidForDiagonalMode(pos, posFirst, sideFirst);
-                case FACE:      return isNewPositionValidForFaceMode(pos, side, sideFirst);
-                case LAYER:     return isNewPositionValidForLayerMode(pos, posFirst, sideFirst);
-                case LINE:      return isNewPositionValidForLineMode(pos, posFirst, sideFirst);
-                case PLANE:     return isNewPositionValidForPlaneMode(pos, posFirst, sideFirst);
-                default:        return true;
-            }
+                case COLUMN -> isNewPositionValidForColumnMode(pos, posFirst, sideFirst);
+                case DIAGONAL -> isNewPositionValidForDiagonalMode(pos, posFirst, sideFirst);
+                case FACE -> isNewPositionValidForFaceMode(pos, side, sideFirst);
+                case LAYER -> isNewPositionValidForLayerMode(pos, posFirst, sideFirst);
+                case LINE -> isNewPositionValidForLineMode(pos, posFirst, sideFirst);
+                case PLANE -> isNewPositionValidForPlaneMode(pos, posFirst, sideFirst);
+            };
         }
         else
         {
@@ -1153,15 +1150,12 @@ public class PlacementTweaks
     {
         Direction.Axis axis = sideFirst.getAxis();
 
-        switch (axis)
+        return switch (axis)
         {
-            case X: return posNew.getY() == posFirst.getY() && posNew.getZ() == posFirst.getZ();
-            case Y: return posNew.getX() == posFirst.getX() && posNew.getZ() == posFirst.getZ();
-            case Z: return posNew.getX() == posFirst.getX() && posNew.getY() == posFirst.getY();
-
-            default:
-                return false;
-        }
+            case X -> posNew.getY() == posFirst.getY() && posNew.getZ() == posFirst.getZ();
+            case Y -> posNew.getX() == posFirst.getX() && posNew.getZ() == posFirst.getZ();
+            case Z -> posNew.getX() == posFirst.getX() && posNew.getY() == posFirst.getY();
+        };
     }
 
     private static boolean isNewPositionValidForDiagonalMode(BlockPos posNew, BlockPos posFirst, Direction sideFirst)
@@ -1169,15 +1163,12 @@ public class PlacementTweaks
         Direction.Axis axis = sideFirst.getAxis();
         BlockPos relativePos = posNew.subtract(posFirst);
 
-        switch (axis)
+        return switch (axis)
         {
-            case X: return posNew.getX() == posFirst.getX() && Math.abs(relativePos.getY()) == Math.abs(relativePos.getZ());
-            case Y: return posNew.getY() == posFirst.getY() && Math.abs(relativePos.getX()) == Math.abs(relativePos.getZ());
-            case Z: return posNew.getZ() == posFirst.getZ() && Math.abs(relativePos.getX()) == Math.abs(relativePos.getY());
-
-            default:
-                return false;
-        }
+            case X -> posNew.getX() == posFirst.getX() && Math.abs(relativePos.getY()) == Math.abs(relativePos.getZ());
+            case Y -> posNew.getY() == posFirst.getY() && Math.abs(relativePos.getX()) == Math.abs(relativePos.getZ());
+            case Z -> posNew.getZ() == posFirst.getZ() && Math.abs(relativePos.getX()) == Math.abs(relativePos.getY());
+        };
     }
 
     private static boolean isNewPositionValidForFaceMode(BlockPos posNew, Direction side, Direction sideFirst)
@@ -1194,30 +1185,27 @@ public class PlacementTweaks
     {
         Direction.Axis axis = sideFirst.getAxis();
 
-        switch (axis)
+        return switch (axis)
         {
-            case X: return posNew.getX() == posFirst.getX() && (posNew.getY() == posFirst.getY() || posNew.getZ() == posFirst.getZ());
-            case Y: return posNew.getY() == posFirst.getY() && (posNew.getX() == posFirst.getX() || posNew.getZ() == posFirst.getZ());
-            case Z: return posNew.getZ() == posFirst.getZ() && (posNew.getX() == posFirst.getX() || posNew.getY() == posFirst.getY());
-
-            default:
-                return false;
-        }
+            case X ->
+                    posNew.getX() == posFirst.getX() && (posNew.getY() == posFirst.getY() || posNew.getZ() == posFirst.getZ());
+            case Y ->
+                    posNew.getY() == posFirst.getY() && (posNew.getX() == posFirst.getX() || posNew.getZ() == posFirst.getZ());
+            case Z ->
+                    posNew.getZ() == posFirst.getZ() && (posNew.getX() == posFirst.getX() || posNew.getY() == posFirst.getY());
+        };
     }
 
     private static boolean isNewPositionValidForPlaneMode(BlockPos posNew, BlockPos posFirst, Direction sideFirst)
     {
         Direction.Axis axis = sideFirst.getAxis();
 
-        switch (axis)
+        return switch (axis)
         {
-            case X: return posNew.getX() == posFirst.getX();
-            case Y: return posNew.getY() == posFirst.getY();
-            case Z: return posNew.getZ() == posFirst.getZ();
-
-            default:
-                return false;
-        }
+            case X -> posNew.getX() == posFirst.getX();
+            case Y -> posNew.getY() == posFirst.getY();
+            case Z -> posNew.getZ() == posFirst.getZ();
+        };
     }
 
     /*
@@ -1296,11 +1284,8 @@ public class PlacementTweaks
                 return true;
             }
 
-            if (mc.options.attackKey.isPressed() &&
-                FeatureToggle.TWEAK_FAST_LEFT_CLICK.getBooleanValue())
-            {
-                return true;
-            }
+            return mc.options.attackKey.isPressed() &&
+                    FeatureToggle.TWEAK_FAST_LEFT_CLICK.getBooleanValue();
         }
 
         return false;

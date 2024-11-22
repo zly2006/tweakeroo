@@ -167,7 +167,7 @@ public class RayTraceUtils
                 }
 
                 if (ctx != null &&
-                        (ctx.inv() != null && !ctx.inv().isEmpty()))
+                   (ctx.inv() != null && !ctx.inv().isEmpty()))
                 {
                     lastBlockEntityContext = Pair.of(pos, ctx);
                     return ctx;
@@ -207,7 +207,17 @@ public class RayTraceUtils
             }
 
             if (ctx != null &&
-                    (ctx.inv() != null && !ctx.inv().isEmpty()))
+               (ctx.inv() != null && !ctx.inv().isEmpty()))
+            {
+                lastEntityContext = Pair.of(entity.getId(), ctx);
+                return ctx;
+            }
+            // Non-Inventory/Empty Entity
+            else if (ctx != null &&
+                    (ctx.type() == InventoryOverlay.InventoryRenderType.WOLF ||
+                     ctx.type() == InventoryOverlay.InventoryRenderType.VILLAGER ||
+                     ctx.type() == InventoryOverlay.InventoryRenderType.HORSE ||
+                     ctx.type() == InventoryOverlay.InventoryRenderType.PLAYER))
             {
                 lastEntityContext = Pair.of(entity.getId(), ctx);
                 return ctx;
@@ -338,10 +348,8 @@ public class RayTraceUtils
 
             // Fix for empty horse inv
             if (inv != null &&
-                    //inv.size() == 1 &&
                     nbt.contains(NbtKeys.ITEMS) &&
                     nbt.getList(NbtKeys.ITEMS, Constants.NBT.TAG_COMPOUND).size() > 1)
-            //!DataManager.getInstance().hasIntegratedServer())
             {
                 if (entity instanceof AbstractHorseEntity)
                 {
@@ -355,9 +363,7 @@ public class RayTraceUtils
             }
             // Fix for saddled horse, no inv
             else if (inv != null &&
-                    //inv.size() == 1 &&
                     nbt.contains(NbtKeys.SADDLE))
-            //!DataManager.getInstance().hasIntegratedServer())
             {
                 inv2 = fi.dy.masa.malilib.util.InventoryUtils.getNbtInventoryHorseFix(nbt, -1, entity.getRegistryManager());
                 inv = null;
@@ -366,7 +372,6 @@ public class RayTraceUtils
             else if (inv != null && inv.size() == 8 &&
                     nbt.contains(NbtKeys.INVENTORY) &&
                     !nbt.getList(NbtKeys.INVENTORY, Constants.NBT.TAG_COMPOUND).isEmpty())
-            //!DataManager.getInstance().hasIntegratedServer())
             {
                 inv2 = fi.dy.masa.malilib.util.InventoryUtils.getNbtInventory(nbt, 8, entity.getRegistryManager());
                 inv = null;
