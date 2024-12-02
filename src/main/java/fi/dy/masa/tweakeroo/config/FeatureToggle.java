@@ -257,7 +257,6 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
             name = GuiBase.TXT_GOLD + name + GuiBase.TXT_RST;
         }
 
-        //System.out.printf("FeatureToggle#getConfigGuiDisplayName(): translatedName [%s] // test [%s]\n", this.translatedName, name);
         return name;
     }
 
@@ -266,6 +265,19 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     {
         return StringUtils.getTranslatedOrFallback(this.prettyName,
                                                    !this.prettyName.isEmpty() ? this.prettyName : StringUtils.splitCamelCase(this.name.substring(5)));
+    }
+
+    @Override
+    public String getTranslatedName()
+    {
+        String name = StringUtils.getTranslatedOrFallback(this.translatedName, this.name);
+
+        if (this.singlePlayer)
+        {
+            name = GuiBase.TXT_GOLD + name + GuiBase.TXT_RST;
+        }
+
+        return name;
     }
 
     @Override
@@ -283,9 +295,26 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     }
 
     @Override
-    public String getTranslatedName()
+    public void setPrettyName(String s)
     {
-        return StringUtils.getTranslatedOrFallback(this.translatedName, this.name);
+        this.prettyName = s;
+    }
+
+    @Override
+    public void setTranslatedName(String s)
+    {
+        this.translatedName = s;
+    }
+
+    @Override
+    public void setComment(String s)
+    {
+        this.comment = s;
+    }
+
+    private static String buildTranslateName(String name, String type)
+    {
+        return FEATURE_KEY + "." + type + "." + name;
     }
 
     @Override
@@ -318,29 +347,6 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     public void setValueChangeCallback(IValueChangeCallback<IConfigBoolean> callback)
     {
         this.callback = callback;
-    }
-
-    @Override
-    public void setPrettyName(String s)
-    {
-        this.prettyName = s;
-    }
-
-    @Override
-    public void setTranslatedName(String s)
-    {
-        this.translatedName = s;
-    }
-
-    @Override
-    public void setComment(String s)
-    {
-        this.comment = s;
-    }
-
-    private static String buildTranslateName(String name, String type)
-    {
-        return FEATURE_KEY + "." + type + "." + name;
     }
 
     @Override
