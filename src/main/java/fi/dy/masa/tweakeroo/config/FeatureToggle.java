@@ -250,7 +250,6 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     @Override
     public String getConfigGuiDisplayName()
     {
-        // This doesn't get called ?
         String name = StringUtils.getTranslatedOrFallback(this.translatedName, this.name);
 
         if (this.singlePlayer)
@@ -267,6 +266,26 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     {
         return StringUtils.getTranslatedOrFallback(this.prettyName,
                                                    !this.prettyName.isEmpty() ? this.prettyName : StringUtils.splitCamelCase(this.name.substring(5)));
+    }
+
+    @Override
+    public String getComment()
+    {
+        String comment = StringUtils.getTranslatedOrFallback(this.comment, this.comment);
+
+        if (comment != null && this.singlePlayer)
+        {
+            return comment + "\n" + StringUtils.translate("tweakeroo.label.config_comment.single_player_only");
+        }
+
+        //System.out.printf("FeatureToggle#getComment(): comment [%s] // test [%s]\n", this.comment, comment);
+        return comment;
+    }
+
+    @Override
+    public String getTranslatedName()
+    {
+        return StringUtils.getTranslatedOrFallback(this.translatedName, this.name);
     }
 
     @Override
@@ -299,26 +318,6 @@ public enum FeatureToggle implements IHotkeyTogglable, IConfigNotifiable<IConfig
     public void setValueChangeCallback(IValueChangeCallback<IConfigBoolean> callback)
     {
         this.callback = callback;
-    }
-
-    @Override
-    public String getComment()
-    {
-        String comment = StringUtils.getTranslatedOrFallback(this.comment, this.comment);
-
-        if (comment != null && this.singlePlayer)
-        {
-            return comment + "\n" + StringUtils.translate("tweakeroo.label.config_comment.single_player_only");
-        }
-
-        //System.out.printf("FeatureToggle#getComment(): comment [%s] // test [%s]\n", this.comment, comment);
-        return comment;
-    }
-
-    @Override
-    public String getTranslatedName()
-    {
-        return this.translatedName;
     }
 
     @Override
