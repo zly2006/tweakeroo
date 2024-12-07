@@ -1,5 +1,6 @@
 package fi.dy.masa.tweakeroo.mixin;
 
+import net.minecraft.client.option.GameOptions;
 import org.joml.Matrix4f;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -109,5 +110,15 @@ public abstract class MixinWorldRenderer
             CameraUtils.markChunksForRebuild(x, z, this.lastUpdatePosX, this.lastUpdatePosZ);
             // Could send this to ServuX in the future
         }
+    }
+
+    @Redirect(
+        method = "*",
+        require = 0,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getClampedViewDistance()I")
+    )
+    private int getViewDistance(GameOptions options)
+    {
+        return options.getClampedViewDistance() + 8;
     }
 }
