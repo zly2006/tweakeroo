@@ -46,6 +46,7 @@
     "MixinEntityRenderDispatcher",
     "MixinExplosion",
     "MixinFillCommand",
+    "MixinFrustum",
     "MixinGameRenderer",
     "MixinGameRenderer_ViewBob",
     "MixinHeldItemRenderer",
