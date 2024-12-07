@@ -119,6 +119,16 @@ public abstract class MixinWorldRenderer
     )
     private int getViewDistance(GameOptions options)
     {
-        return options.getClampedViewDistance() + 8;
+        if (FeatureToggle.TWEAK_RENDER_EDGE_CHUNKS.getBooleanValue())
+        {
+            // In this way, the edge chunk is always rendered even if:
+            // + the chunks are outside the view distance
+            // + the camera is outside the view distance
+            return options.getClampedViewDistance() + 8;
+        }
+        else
+        {
+            return options.getClampedViewDistance();
+        }
     }
 }
